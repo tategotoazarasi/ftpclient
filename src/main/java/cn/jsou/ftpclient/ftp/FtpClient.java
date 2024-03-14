@@ -7,63 +7,70 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class FtpClient {
-	private String         server;
-	private Socket         socket;
-	private BufferedReader reader;
-	private PrintWriter    writer;
+	private final String         server;
+	private final Socket         socket;
+	private final BufferedReader reader;
+	private final PrintWriter    writer;
 
-	// 构造函数，用于初始化与FTP服务器的连接
 	public FtpClient(String server, String port) throws Exception {
 		this.server = server;
-		this.socket = new Socket(server, Integer.parseInt(port)); // FTP默认端口是21
+		this.socket = new Socket(server, Integer.parseInt(port));
 		this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
-		// 处理多行的服务器欢迎信息
+		// 处理服务器的欢迎信息
 		readMultilineResponse();
 	}
 
-	private void readMultilineResponse() throws Exception {
+	// 方法：读取多行响应并返回状态码
+	// 修改readMultilineResponse方法返回ReplyCode枚举类型
+	private ReplyCode readMultilineResponse() throws Exception {
 		String responseLine;
-		// 首先读取响应的第一行
+		String statusCode = null;
+
 		responseLine = reader.readLine();
 		System.out.println("Server response: " + responseLine);
-		// 检查是否为多行响应的开始（状态码后跟"-"）
 		if (responseLine.matches("^\\d{3}-.*")) {
-			// 提取状态码用于匹配多行响应的结束
-			String statusCode = responseLine.substring(0, 3);
-			// 循环读取后续行直到遇到以状态码后跟空格开始的行
+			statusCode = responseLine.substring(0, 3);
 			while ((responseLine = reader.readLine()) != null) {
 				System.out.println("Server response: " + responseLine);
-				// 当前行是否标志着多行响应的结束
 				if (responseLine.startsWith(statusCode + " ")) {
-					break; // 结束行找到，退出循环
+					break;
 				}
 			}
+		} else if (responseLine.matches("^\\d{3} .*")) {
+			// 对于非多行响应，直接返回状态码
+			statusCode = responseLine.substring(0, 3);
 		}
+		return ReplyCode.findByCode(statusCode); // 使用findByCode查找并返回ReplyCode枚举
 	}
 
 	// 登录方法
 	public boolean login(String username, String password) throws Exception {
-		// 发送用户名
-		writer.println("USER " + username);
-		String userResponse = reader.readLine();
-		System.out.println("USER command response: " + userResponse);
+		ReplyCode userResponseCode = executeCommand("USER", username);
+		if (userResponseCode != ReplyCode.USER_NAME_OKAY_NEED_PASSWORD) { // 331表示用户名OK，需要密码
+			return false;
+		}
 
-		// 发送密码
-		writer.println("PASS " + password);
-		String passResponse = reader.readLine();
-		System.out.println("PASS command response: " + passResponse);
-
-		// 根据服务器响应判断登录是否成功
-		// 注意：这里的判断非常简化，实际情况下需要根据FTP响应代码进行更精确的判断
-		return passResponse.startsWith("230");
+		ReplyCode passResponseCode = executeCommand("PASS", password);
+		return passResponseCode == ReplyCode.USER_LOGGED_IN; // 230表示登录成功
 	}
 
-	// 关闭连接
+	// 方法：执行FTP命令并读取响应
+	public ReplyCode executeCommand(String command, String... args) throws Exception {
+		StringBuilder commandBuilder = new StringBuilder(command);
+		for (String arg : args) {
+			commandBuilder.append(" ").append(arg);
+		}
+		writer.println(commandBuilder);
+
+		return readMultilineResponse();
+	}
+
 	public void disconnect() throws Exception {
 		if (socket != null) {
 			socket.close();
 		}
 	}
 }
+

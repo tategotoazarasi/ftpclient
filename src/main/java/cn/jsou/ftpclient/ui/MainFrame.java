@@ -18,7 +18,7 @@ public class MainFrame extends JFrame {
 	public MainFrame() {
 		setTitle("Java FTP Client");
 		setSize(800, 600);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		initUI();
 	}
 
