@@ -1,5 +1,7 @@
 package cn.jsou.ftpclient.ftp;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -45,14 +47,14 @@ public class FtpClient {
 	}
 
 	// 登录方法
-	public boolean login(String username, String password) throws Exception {
-		ReplyCode userResponseCode = userName(username);
-		if (userResponseCode != ReplyCode.USER_NAME_OKAY_NEED_PASSWORD) { // 331表示用户名OK，需要密码
+	public boolean login(String username, String password) throws IOException {
+		Pair<ReplyCode, Boolean> userResponseCode = userName(username);
+		if (Boolean.FALSE.equals(userResponseCode.getRight())) {
 			return false;
 		}
 
-		ReplyCode passResponseCode = password(password);
-		return passResponseCode == ReplyCode.USER_LOGGED_IN; // 230表示登录成功
+		Pair<ReplyCode, Boolean> passResponseCode = password(password);
+		return passResponseCode.getRight();
 	}
 
 	/**
@@ -67,7 +69,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode userName(String username) throws IOException {
+	public Pair<ReplyCode, Boolean> userName(String username) throws IOException {
 		return sendCommand(USER_NAME, username);
 	}
 
@@ -82,7 +84,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode password(String password) throws IOException {
+	public Pair<ReplyCode, Boolean> password(String password) throws IOException {
 		return sendCommand(PASSWORD, password);
 	}
 
@@ -100,11 +102,11 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode account(String accountInformation) throws IOException {
+	public Pair<ReplyCode, Boolean> account(String accountInformation) throws IOException {
 		return sendCommand(ACCOUNT, accountInformation);
 	}
 
-	private ReplyCode sendCommand(Command command, String... args) throws IOException {
+	private Pair<ReplyCode, Boolean> sendCommand(Command command, String... args) throws IOException {
 		StringBuilder commandBuilder = new StringBuilder(command.getCommand());
 		for (String arg : args) {
 			commandBuilder.append(" ").append(arg);
@@ -112,7 +114,15 @@ public class FtpClient {
 		commandBuilder.append("\r\n");
 		writer.print(commandBuilder);
 		writer.flush();
-		return readMultilineResponse();
+		ReplyCode replyCode = readMultilineResponse();
+		ReplyType replyType = ReplyType.getReplyType(replyCode);
+		Boolean
+				isSuccess =
+				command.isValidReplyCode(replyCode) &&
+				(replyType == ReplyType.POSITIVE_INTERMEDIATE ||
+				 replyType == ReplyType.POSITIVE_PRELIMINARY ||
+				 replyType == ReplyType.POSITIVE_COMPLETION);
+		return Pair.of(replyCode, isSuccess);
 	}
 
 	/**
@@ -124,7 +134,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode printWorkingDirectory() throws IOException {
+	public Pair<ReplyCode, Boolean> printWorkingDirectory() throws IOException {
 		return sendCommand(PRINT_WORKING_DIRECTORY);
 	}
 
@@ -137,7 +147,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode changeToParentDirectory() throws IOException {
+	public Pair<ReplyCode, Boolean> changeToParentDirectory() throws IOException {
 		return sendCommand(CHANGE_TO_PARENT_DIRECTORY);
 	}
 
@@ -153,7 +163,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode structureMount(String pathname) throws IOException {
+	public Pair<ReplyCode, Boolean> structureMount(String pathname) throws IOException {
 		return sendCommand(STRUCTURE_MOUNT, pathname);
 	}
 
@@ -167,7 +177,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode logout() throws IOException {
+	public Pair<ReplyCode, Boolean> logout() throws IOException {
 		return sendCommand(LOGOUT);
 	}
 
@@ -181,7 +191,7 @@ public class FtpClient {
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public ReplyCode reinitialize() throws IOException {
+	public Pair<ReplyCode, Boolean> reinitialize() throws IOException {
 		return sendCommand(REINITIALIZE);
 	}
 
