@@ -55,7 +55,7 @@ public enum ReplyCode {
 	/**
 	 * 服务为新用户准备就绪
 	 */
-	SERVICE_READY_FOR_NEW_USER(220, "Service ready for new user."),
+	SERVICE_READY_FOR_NEW_USER(220, "Service ready for new userName."),
 	/**
 	 * 服务关闭控制连接
 	 *
