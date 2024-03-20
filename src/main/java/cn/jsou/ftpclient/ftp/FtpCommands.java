@@ -227,6 +227,9 @@ public class FtpCommands {
 	 * <p>此命令用于启用或修改命令的特定选项。它允许客户端和服务器就使用特定FTP命令时的行为达成一致。
 	 * 例如，客户端可以使用OPTS命令为MLST或MLSD命令指定希望在响应中看到的确切信息类型。这提高了客户端和服务器之间的互操作性，并允许针对特定会话自定义行为。</p>
 	 *
+	 * @param commandName    命令名称
+	 * @param commandOptions 命令选项
+	 *
 	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
@@ -238,6 +241,48 @@ public class FtpCommands {
 		} else {
 			return sendCommand(OPTIONS, commandName, commandOptions);
 		}
+	}
+
+	/**
+	 * 表示类型
+	 *
+	 * <p>参数指定了在数据表示和存储部分描述的表示类型。一些类型需要第二个参数。第一个参数由单个Telnet字符表示，
+	 * 就像ASCII和EBCDIC的第二个格式参数一样；本地字节的第二个参数是一个十进制整数，表示字节大小。参数之间用（空格，ASCII代码32）分隔。
+	 * 默认表示类型是ASCII非打印。如果更改了格式参数，稍后仅更改第一个参数，格式则返回到非打印默认值。</p>
+	 *
+	 * @param tc 表示类型
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response representationType(TypeCode tc) throws IOException {
+		return sendCommand(REPRESENTATION_TYPE, String.valueOf(tc.getCode()));
+	}
+
+	/**
+	 * 表示类型
+	 *
+	 * <p>参数指定了在数据表示和存储部分描述的表示类型。一些类型需要第二个参数。第一个参数由单个Telnet字符表示，
+	 * 就像ASCII和EBCDIC的第二个格式参数一样；本地字节的第二个参数是一个十进制整数，表示字节大小。参数之间用（空格，ASCII代码32）分隔。
+	 * 默认表示类型是ASCII非打印。如果更改了格式参数，稍后仅更改第一个参数，格式则返回到非打印默认值。</p>
+	 *
+	 * @param tc 表示类型
+	 * @param fc 格式效果器
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response representationType(TypeCode tc, FormCode fc) throws IOException {
+		StringBuilder param = new StringBuilder();
+		param.append(tc.getCode());
+		if (fc != null) {
+			param.append(fc.getCode());
+		}
+		return sendCommand(REPRESENTATION_TYPE, param.toString());
 	}
 
 	public void close() {

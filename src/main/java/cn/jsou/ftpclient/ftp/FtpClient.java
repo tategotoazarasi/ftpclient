@@ -35,11 +35,11 @@ public class FtpClient {
 	// 登录方法
 	public boolean login(String username, String password) throws IOException {
 		Response userResp = ftpCommands.userName(username);
-		if (Boolean.FALSE.equals(userResp.isSuccess())) {
+		if (!userResp.isSuccess()) {
 			return false;
 		}
 		Response passResp = ftpCommands.password(password);
-		if (Boolean.FALSE.equals(passResp.isSuccess())) {
+		if (!passResp.isSuccess()) {
 			return false;
 		}
 		this.username = username;
@@ -67,15 +67,20 @@ public class FtpClient {
 
 		if (serverInfo.hasFeature("UTF8")) {
 			Response optsResp = ftpCommands.options("UTF8", "ON");
-			if (optsResp.isSuccess()) {
-				logger.info("UTF-8 encoding enabled");
+			if (!optsResp.isSuccess()) {
+				logger.warn("Failed to enable UTF-8 support with reply code {}", optsResp.getReplyCode());
 			}
 		}
 
 		Response pwdResp = ftpCommands.printWorkingDirectory();
 		if (pwdResp.isSuccess()) {
-			wd = remoteFs.resolveFile("ftp://" + server + pwdResp.getMessage());
+			wd = remoteFs.resolveFile("ram:/" + pwdResp.getMessage().trim());
 			wd.createFolder();
+		}
+
+		Response typeResp = ftpCommands.representationType(TypeCode.IMAGE);
+		if (!typeResp.isSuccess()) {
+			logger.warn("Failed to set representation type to IMAGE with reply code: {}", typeResp.getReplyCode());
 		}
 	}
 

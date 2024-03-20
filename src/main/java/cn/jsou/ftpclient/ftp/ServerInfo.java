@@ -13,15 +13,15 @@ public class ServerInfo {
 		return sysInfo;
 	}
 
-	public void setSysInfo(String SysInfo) {
-		sysInfo = SysInfo;
+	public void setSysInfo(String sysInfo) {
+		this.sysInfo = sysInfo;
 	}
 
 	public void addFeature(String feature) {
 		features.add(feature);
 	}
 
-	public Boolean hasFeature(String feature) {
+	public boolean hasFeature(String feature) {
 		return features.contains(feature);
 	}
 }
