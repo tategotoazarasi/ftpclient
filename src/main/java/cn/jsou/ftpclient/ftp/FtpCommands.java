@@ -287,6 +287,20 @@ public class FtpCommands {
 		return sendCommand(REPRESENTATION_TYPE, param.toString());
 	}
 
+	/**
+	 * 数据端口
+	 *
+	 * <p>参数是用于数据连接的数据端口的HOST-PORT规范。用户和服务器数据端口都有默认值，在正常情况下不需要这个命令及其回复。
+	 * 如果使用此命令，参数是32位互联网主机地址和16位TCP端口地址的连接。 这个地址信息被分解为8位字段，每个字段的值作为十进制数（以字符字符串表示）传输。字段之间用逗号分隔。一个端口命令将是： PORT
+	 * h1,h2,h3,h4,p1,p2 其中h1是互联网主机地址的高8位。</p>
+	 *
+	 * @param socket 用于数据连接的数据端口
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
 	Response dataPort(ServerSocket socket) throws IOException {
 		InetAddress localAddress = socket.getInetAddress();
 		int         port         = socket.getLocalPort();
@@ -304,6 +318,21 @@ public class FtpCommands {
 
 		// 发送PORT命令
 		return sendCommand(DATA_PORT, commandArgument);
+	}
+
+	/**
+	 * 机器列表目录
+	 *
+	 * <p>此命令要求服务器为指定的目录发送一个完整的机器可解析的目录列表，包括所有子目录和文件。MLSD是MLST命令的扩展，
+	 * 它提供了一种获取目录及其所有内容的详细信息的方法。与MLST类似，MLSD命令的输出设计为由客户端软件解析。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc3659">RFC 3659</a>
+	 */
+	Response machineListDictionary() throws IOException {
+		return sendCommand(MACHINE_LIST_DICTIONARY);
 	}
 
 	public void close() {

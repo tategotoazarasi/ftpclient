@@ -7,7 +7,10 @@ import org.apache.commons.vfs2.VFS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Arrays;
 
@@ -86,6 +89,34 @@ public class FtpClient {
 		Response typeResp = ftpCommands.representationType(TypeCode.IMAGE);
 		if (!typeResp.isSuccess()) {
 			logger.warn("Failed to set representation type to IMAGE with reply code: {}", typeResp.getReplyCode());
+		}
+
+		Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
+		if (!portResp.isSuccess()) {
+			logger.warn("Failed to set data port with reply code: {}", portResp.getReplyCode());
+		}
+
+		dataServer.registerConnectionHandler(socket -> {
+			try (InputStream inputStream = socket.getInputStream();
+			     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					// 打印从服务器接收到的每一行数据
+					logger.info(line);
+				}
+			} catch (IOException e) {
+				logger.error("Error handling MLSD data connection", e);
+			} finally {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					logger.error("Error closing data connection socket", e);
+				}
+			}
+		});
+		Response mlsdResp = ftpCommands.machineListDictionary();
+		if (!mlsdResp.isSuccess()) {
+			logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
 		}
 	}
 

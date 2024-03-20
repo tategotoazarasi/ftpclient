@@ -11,7 +11,7 @@ import java.net.Socket;
 
 public class DataServer implements Runnable {
 	private static final Logger            logger = LogManager.getLogger(DataServer.class);
-	private final        ServerSocket      serverSocket;
+	final ServerSocket serverSocket;
 	private              ConnectionHandler connectionHandler; // 注册的处理函数
 
 	public DataServer(InetAddress ipAddress) throws IOException {
