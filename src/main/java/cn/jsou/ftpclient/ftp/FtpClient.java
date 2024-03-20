@@ -1,6 +1,9 @@
 package cn.jsou.ftpclient.ftp;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.VFS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,10 +19,15 @@ public class FtpClient {
 	private final        FtpCommands ftpCommands;
 	public               String      username;
 
+	public  FileSystemManager remoteFs = VFS.getManager();
+	private FileObject        wd       = remoteFs.resolveFile("ram:/");
+
 	public FtpClient(String server, String port) throws IOException {
 		this.server      = server;
 		this.socket      = new Socket(server, Integer.parseInt(port));
 		this.ftpCommands = new FtpCommands(socket);
+		wd.createFolder();
+
 		// 处理服务器的欢迎信息
 		ftpCommands.readResponse();
 	}
@@ -58,10 +66,16 @@ public class FtpClient {
 		}
 
 		if (serverInfo.hasFeature("UTF8")) {
-			Response optResp = ftpCommands.options("UTF8", "ON");
-			if (optResp.isSuccess()) {
+			Response optsResp = ftpCommands.options("UTF8", "ON");
+			if (optsResp.isSuccess()) {
 				logger.info("UTF-8 encoding enabled");
 			}
+		}
+
+		Response pwdResp = ftpCommands.printWorkingDirectory();
+		if (pwdResp.isSuccess()) {
+			wd = remoteFs.resolveFile("ftp://" + server + pwdResp.getMessage());
+			wd.createFolder();
 		}
 	}
 
