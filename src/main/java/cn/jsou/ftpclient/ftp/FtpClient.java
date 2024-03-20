@@ -118,7 +118,6 @@ public class FtpClient {
 		ReplyType replyType = ReplyType.getReplyType(replyCode);
 		Boolean
 				isSuccess =
-				command.isValidReplyCode(replyCode) &&
 				(replyType == ReplyType.POSITIVE_INTERMEDIATE ||
 				 replyType == ReplyType.POSITIVE_PRELIMINARY ||
 				 replyType == ReplyType.POSITIVE_COMPLETION);
