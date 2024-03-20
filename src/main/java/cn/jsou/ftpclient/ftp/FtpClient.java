@@ -12,21 +12,26 @@ import java.net.Socket;
 import java.util.Arrays;
 
 public class FtpClient {
-	private static final Logger      logger     = LogManager.getLogger(FtpClient.class);
-	public final         ServerInfo  serverInfo = new ServerInfo();
-	private final        String      server;
-	private final        Socket      socket;
-	private final        FtpCommands ftpCommands;
-	public               String      username;
-
-	public  FileSystemManager remoteFs = VFS.getManager();
-	private FileObject        wd       = remoteFs.resolveFile("ram:/");
+	private static final Logger            logger     = LogManager.getLogger(FtpClient.class);
+	public final         ServerInfo        serverInfo = new ServerInfo();
+	private final        String            server;
+	private final        Socket            serverSocket;
+	private final        DataServer        dataServer;
+	private final        FtpCommands       ftpCommands;
+	private final        Thread            serverThread;
+	public               String            username;
+	public               FileSystemManager remoteFs   = VFS.getManager();
+	private              FileObject        wd         = remoteFs.resolveFile("ram:/");
 
 	public FtpClient(String server, String port) throws IOException {
-		this.server      = server;
-		this.socket      = new Socket(server, Integer.parseInt(port));
-		this.ftpCommands = new FtpCommands(socket);
+		this.server       = server;
+		this.serverSocket = new Socket(server, Integer.parseInt(port));
+		this.ftpCommands  = new FtpCommands(serverSocket);
+		this.dataServer   = new DataServer(serverSocket.getLocalAddress());
 		wd.createFolder();
+		// 在新线程中运行DataServer
+		this.serverThread = new Thread(dataServer);
+		this.serverThread.start();
 
 		// 处理服务器的欢迎信息
 		ftpCommands.readResponse();
@@ -84,8 +89,10 @@ public class FtpClient {
 		}
 	}
 
-	public void close() {
+	public void close() throws InterruptedException {
 		ftpCommands.close();
-		IOUtils.closeQuietly(socket);
+		IOUtils.closeQuietly(serverSocket);
+		dataServer.close();
+		serverThread.join();
 	}
 }

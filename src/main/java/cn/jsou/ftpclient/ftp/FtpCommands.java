@@ -6,6 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import static cn.jsou.ftpclient.ftp.Command.*;
@@ -283,6 +285,25 @@ public class FtpCommands {
 			param.append(fc.getCode());
 		}
 		return sendCommand(REPRESENTATION_TYPE, param.toString());
+	}
+
+	Response dataPort(ServerSocket socket) throws IOException {
+		InetAddress localAddress = socket.getInetAddress();
+		int         port         = socket.getLocalPort();
+
+		// 将IP地址转换为FTP命令所需的格式
+		String hostAddress = localAddress.getHostAddress();
+		String hostNumber  = hostAddress.replace(".", ",");
+
+		// 计算端口号的高位和低位字节
+		int highPort = port / (1 << 8);
+		int lowPort  = port % (1 << 8);
+
+		// 构造PORT命令的参数
+		String commandArgument = String.format("%s,%d,%d", hostNumber, highPort, lowPort);
+
+		// 发送PORT命令
+		return sendCommand(DATA_PORT, commandArgument);
 	}
 
 	public void close() {
