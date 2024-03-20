@@ -1,5 +1,7 @@
 package cn.jsou.ftpclient.ftp;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
@@ -107,12 +109,8 @@ public class FtpClient {
 	}
 
 	private Pair<ReplyCode, Boolean> sendCommand(Command command, String... args) throws IOException {
-		StringBuilder commandBuilder = new StringBuilder(command.getCommand());
-		for (String arg : args) {
-			commandBuilder.append(" ").append(arg);
-		}
-		commandBuilder.append("\r\n");
-		writer.print(commandBuilder);
+		String commandLine = command.getCommand() + " " + Joiner.on(" ").join(args) + "\r\n";
+		writer.print(commandLine);
 		writer.flush();
 		ReplyCode replyCode = readMultilineResponse();
 		ReplyType replyType = ReplyType.getReplyType(replyCode);
@@ -194,9 +192,9 @@ public class FtpClient {
 		return sendCommand(REINITIALIZE);
 	}
 
-	public void disconnect() throws IOException {
-		if (socket != null) {
-			socket.close();
-		}
+	public void disconnect() {
+		IOUtils.closeQuietly(reader);
+		IOUtils.closeQuietly(writer);
+		IOUtils.closeQuietly(socket);
 	}
 }
