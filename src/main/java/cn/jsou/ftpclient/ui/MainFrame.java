@@ -86,6 +86,7 @@ public class MainFrame extends JFrame {
 				                              "登录失败",
 				                              JOptionPane.ERROR_MESSAGE);
 			}
+			ftpClient.system();
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(this, "登录失败：" + ex.getMessage(), "登录失败", JOptionPane.ERROR_MESSAGE);
 		}

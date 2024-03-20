@@ -7,6 +7,8 @@ public enum Command {
 	 * <p>参数字段是一个Telnet字符串，用于识别用户。用户标识是服务器为访问其文件系统所需的。
 	 * 这个命令通常是用户在控制连接建立后传输的第一个命令（有些服务器可能要求这样）。一些服务器还可能要求额外的身份信息，如密码和/或账户命令。
 	 * 服务器可能允许在任何时候输入新的USER命令，以更改访问控制和/或记账信息。这将清除已提供的任何用户、密码和账户信息，并重新开始登录序列。 所有传输参数保持不变，任何正在进行的文件传输都将在旧的访问控制参数下完成。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	USER_NAME("USER"),
 	/**
@@ -14,6 +16,8 @@ public enum Command {
 	 *
 	 * <p>参数字段是一个指定用户密码的Telnet字符串。这个命令必须紧跟在用户名命令之后，并且对于一些站点来说，完成了用户的访问控制身份验证。
 	 * 由于密码信息非常敏感，通常希望“掩盖”或抑制打印出来。看来服务器没有确保这一点的万无一失的方法。 因此，隐藏敏感密码信息的责任在于用户-FTP进程。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	PASSWORD("PASS"),
 	/**
@@ -23,6 +27,8 @@ public enum Command {
 	 * 而其他站点只在特定访问时需要，如存储文件。在后一种情况下，命令可以在任何时候到达。
 	 * 对于自动化，有回复代码来区分这些情况：当登录需要账户信息时，成功的PASSword命令的响应是回复代码332。另一方面，如果登录不需要账户信息，
 	 * 成功的PASSword命令的回复是230；如果在对话中稍后发出的命令需要账户信息， 服务器应根据它是存储（等待接收ACCounT命令）还是丢弃命令，分别返回332或532回复。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	ACCOUNT("ACCT"),
 	/**
@@ -30,6 +36,8 @@ public enum Command {
 	 *
 	 * <p>此命令允许用户在不更改其登录或记账信息的情况下，使用不同的目录或数据集进行文件存储或检索。传输参数同样未改变。
 	 * 参数是指定目录或其他系统依赖的文件组指示符的路径名。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	CHANGE_WORKING_DIRECTORY("CWD"),
 	/**
@@ -37,6 +45,8 @@ public enum Command {
 	 *
 	 * <p>此命令是CWD的特例，包含在内是为了简化在具有不同父目录命名语法的操作系统之间传输目录树的程序的实现。
 	 * 回复代码应与CWD的回复代码相同。有关更多详细信息，请参见附录II。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	CHANGE_TO_PARENT_DIRECTORY("CDUP"),
 	/**
@@ -44,6 +54,8 @@ public enum Command {
 	 *
 	 * <p>此命令允许用户在不更改其登录或账户信息的情况下，挂载不同的文件系统数据结构。
 	 * 传输参数同样未改变。参数是指定目录或其他系统依赖的文件组指示符的路径名。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	STRUCTURE_MOUNT("SMNT"),
 	/**
@@ -51,6 +63,8 @@ public enum Command {
 	 *
 	 * <p>此命令终止一个USER会话，清除所有I/O和账户信息，但允许任何正在进行的传输完成。
 	 * 所有参数重置为默认设置，控制连接保持开放。这与用户刚刚打开控制连接后发现的状态相同。预计之后会有一个USER命令。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	REINITIALIZE("REIN"),
 	/**
@@ -58,6 +72,8 @@ public enum Command {
 	 *
 	 * <p>此命令终止一个USER会话，如果没有进行文件传输，服务器将关闭控制连接。如果文件传输正在进行中，连接将保持开放以等待结果响应，
 	 * 然后服务器将其关闭。如果用户进程为多个用户传输文件但不希望为每个用户关闭然后重新打开连接，则应使用REIN命令而不是QUIT。 控制连接上的意外关闭将导致服务器采取中止（ABOR）和注销（QUIT）的有效操作。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	LOGOUT("QUIT"),
 	/**
@@ -66,6 +82,8 @@ public enum Command {
 	 * <p>参数是用于数据连接的数据端口的HOST-PORT规范。用户和服务器数据端口都有默认值，在正常情况下不需要这个命令及其回复。
 	 * 如果使用此命令，参数是32位互联网主机地址和16位TCP端口地址的连接。 这个地址信息被分解为8位字段，每个字段的值作为十进制数（以字符字符串表示）传输。字段之间用逗号分隔。一个端口命令将是： PORT
 	 * h1,h2,h3,h4,p1,p2 其中h1是互联网主机地址的高8位。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	DATA_PORT("PORT"),
 	/**
@@ -73,12 +91,16 @@ public enum Command {
 	 *
 	 * <p>此命令请求服务器-DTP在一个数据端口（不是其默认数据端口）上“监听”，并等待连接而不是在收到传输命令时发起连接。
 	 * 此命令的响应包括服务器正在监听的主机和端口地址。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	PASSIVE("PASV"),
 	/**
 	 * 传输模式
 	 *
 	 * <p>参数是一个指定数据传输模式的单个Telnet字符代码，如传输模式部分所述。默认传输模式是流。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	TRANSFER_MODE("MODE"),
 	/**
@@ -87,12 +109,16 @@ public enum Command {
 	 * <p>参数指定了在数据表示和存储部分描述的表示类型。一些类型需要第二个参数。第一个参数由单个Telnet字符表示，
 	 * 就像ASCII和EBCDIC的第二个格式参数一样；本地字节的第二个参数是一个十进制整数，表示字节大小。参数之间用（空格，ASCII代码32）分隔。
 	 * 默认表示类型是ASCII非打印。如果更改了格式参数，稍后仅更改第一个参数，格式则返回到非打印默认值。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	REPRESENTATION_TYPE("TYPE"),
 	/**
 	 * 文件结构
 	 *
 	 * <p>参数是一个指定文件结构的单个Telnet字符代码，如数据表示和存储部分所述。默认结构是文件。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	FILE_STRUCTURE("STRU"),
 
@@ -104,6 +130,8 @@ public enum Command {
 	 * 这由命令的第二个参数字段中的十进制整数表示。这第二个参数是可选的，但如果存在，应该用三个Telnet字符 R 与第一个参数分开。
 	 * 此命令应该后跟一个STORe或APPEnd命令。对于那些不需要事先声明文件的最大大小的服务器，ALLO命令应该被视为NOOP（无操作），
 	 * 而那些只对最大记录或页面大小感兴趣的服务器应该接受第一个参数中的虚拟值并忽略它。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	ALLOCATE("ALLO"),
 	/**
@@ -111,6 +139,8 @@ public enum Command {
 	 *
 	 * <p>参数字段代表要重新启动文件传输的服务器标记。此命令不会导致文件传输，而是跳过文件到指定的数据检查点。
 	 * 此命令应立即后跟适当的FTP服务命令，该命令将导致文件传输恢复。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	RESTART("REST"),
 	/**
@@ -118,18 +148,24 @@ public enum Command {
 	 *
 	 * <p>此命令使服务器-DTP接受通过数据连接传输的数据，并将数据作为文件存储在服务器站点。
 	 * 如果路径名中指定的文件在服务器站点存在，则其内容将被传输的数据替换。如果路径名中指定的文件不存在，则将在服务器站点创建新文件。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	STORE("STOR"),
 	/**
 	 * 存储唯一
 	 *
 	 * <p>此命令的行为类似于STOR，除了结果文件将在当前目录下以该目录唯一的名称创建。250传输开始响应必须包括生成的名称。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	STORE_UNIQUE("STOU"),
 	/**
 	 * 检索
 	 *
 	 * <p>此命令使服务器-DTP将指定路径名中的文件副本传输到数据连接另一端的服务器或用户-DTP。服务器站点上的文件的状态和内容不受影响。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	RETRIEVE("RETR"),
 	/**
@@ -138,6 +174,8 @@ public enum Command {
 	 * <p>此命令导致服务器将列表从服务器发送到被动DTP。如果路径名指定了一个目录或其他文件组，则服务器应传输指定目录中的文件列表。
 	 * 如果路径名指定了一个文件，则服务器应发送有关该文件的当前信息。空参数意味着用户的当前工作或默认目录。 数据传输在类型ASCII或类型EBCDIC上通过数据连接进行。（用户必须确保类型适当地为ASCII或EBCDIC）。
 	 * 由于不同系统上关于文件的信息可能差异很大，这些信息可能很难在程序中自动使用，但对于人类用户可能非常有用。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	LIST("LIST"),
 	/**
@@ -146,6 +184,8 @@ public enum Command {
 	 * <p>此命令导致目录列表从服务器发送到用户站点。路径名应指定一个目录或其他系统特定的文件组描述符；空参数意味着当前目录。
 	 * 服务器将返回文件名流，而没有其他信息。数据将以ASCII或EBCDIC类型通过数据连接传输，作为有效的路径名字符串，由或分隔。（
 	 * 同样，用户必须确保类型正确。）此命令旨在返回可以由程序进一步自动处理文件的信息。例如，在实现“多个获取”功能时。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	NAME_LIST("NLST"),
 	/**
@@ -153,18 +193,24 @@ public enum Command {
 	 *
 	 * <p>此命令使服务器-DTP接受通过数据连接传输的数据，并将数据存储在服务器站点的文件中。
 	 * 如果路径名中指定的文件在服务器站点存在，则数据将被追加到该文件中；否则，将在服务器站点创建路径名中指定的文件。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	APPEND("APPE"),
 	/**
 	 * 重命名从
 	 *
 	 * <p>此命令指定要重命名的文件的旧路径名。此命令必须立即由指定新文件路径名的“重命名到”命令跟随。两个命令一起导致文件被重命名。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	RENAME_FROM("RNFR"),
 	/**
 	 * 重命名到
 	 *
 	 * <p>此命令指定在紧接前面的“重命名从”命令中指定的文件的新路径名。两个命令一起导致一个文件被重命名。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	RENAME_TO("RNTO"),
 	/**
@@ -172,24 +218,32 @@ public enum Command {
 	 *
 	 * <p>此命令导致在路径名中指定的文件在服务器站点被删除。
 	 * 如果需要额外的保护级别（如查询，“您真的希望删除吗？”），则应由用户-FTP进程提供。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	DELETE("DELE"),
 	/**
 	 * 删除目录
 	 *
 	 * <p>此命令导致在路径名中指定的目录被删除，作为一个目录（如果路径名是绝对的）或作为当前工作目录的子目录（如果路径名是相对的）。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	REMOVE_DIRECTORY("RMD"),
 	/**
 	 * 创建目录
 	 *
 	 * <p>此命令导致在路径名中指定的目录被创建为一个目录（如果路径名是绝对的）或作为当前工作目录的子目录（如果路径名是相对的）。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	MAKE_DIRECTORY("MKD"),
 	/**
 	 * 打印工作目录
 	 *
 	 * <p>此命令导致在回复中返回当前工作目录的名称。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	PRINT_WORKING_DIRECTORY("PWD"),
 	/**
@@ -199,12 +253,16 @@ public enum Command {
 	 * 如果前一个命令已经完成（包括数据传输），则不采取任何行动。服务器不应关闭控制连接，但必须关闭数据连接。 服务器收到此命令有两种情况：1. FTP服务命令已经完成 2. FTP服务命令仍在进行中。
 	 * 在第一种情况下，如果数据连接已经打开，服务器关闭数据连接，并以226回复响应，表明中止命令已成功处理。 在第二种情况下，服务器中止正在进行的FTP服务并关闭数据连接，返回426回复以指示服务请求异常终止。
 	 * 然后服务器发送226回复，表明中止命令已成功处理。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	ABORT("ABOR"),
 	/**
 	 * 系统
 	 *
-	 * <p>此命令用于找出服务器的操作系统类型。回复的第一个词应该是在当前版本的Assigned Numbers文档[4]中列出的系统名称之一。</p>
+	 * <p>此命令用于找出服务器的操作系统类型。回复的第一个词应该是在当前版本的Assigned Numbers文档中列出的系统名称之一。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	SYSTEM("SYST"),
 	/**
@@ -213,6 +271,8 @@ public enum Command {
 	 * <p>此命令将导致通过控制连接以回复形式发送状态响应。该命令可以在文件传输期间发送（连同Telnet IP和同步信号——见FTP命令部分），
 	 * 在这种情况下，服务器将响应正在进行的操作的状态，或者可以在文件传输之间发送。在后一种情况下，命令可能有一个参数字段。 如果参数是路径名，则该命令类似于“list”命令，只是数据将通过控制连接传输。
 	 * 如果给出部分路径名，服务器可能会回复与该规范相关的文件名或属性列表。 如果没有给出参数，则服务器应返回有关服务器FTP进程的一般状态信息。这应该包括所有传输参数的当前值和连接的状态。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	STATUS("STAT"),
 	/**
@@ -220,6 +280,8 @@ public enum Command {
 	 *
 	 * <p>此命令将导致服务器通过控制连接向用户发送有关其实现状态的有用信息。该命令可以带有一个参数（例如，任何命令名称），
 	 * 并返回更具体的信息作为响应。回复类型为211或214。建议在输入USER命令之前允许使用HELP。 服务器可以使用此回复来指定站点依赖的参数，例如，响应于HELP SITE。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	HELP("HELP"),
 	/**
@@ -227,12 +289,16 @@ public enum Command {
 	 *
 	 * <p>此命令由服务器用来提供对其系统特定的、对文件传输至关重要但不足以作为协议中的命令包括的服务。
 	 * 这些服务的性质和语法规范可以在对HELP SITE命令的回复中说明。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	SITE("SITE"),
 	/**
 	 * 无操作
 	 *
 	 * <p>此命令不影响任何参数或之前输入的命令。它指定的唯一操作是服务器发送OK回复。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	NOOP("NOOP"),
 	/**
@@ -240,6 +306,8 @@ public enum Command {
 	 *
 	 * <p>此命令用于指示服务器支持无意义的虚拟文件存储（TVFS）。TVFS是一种文件系统表示，其中所有路径都从根开始，并且没有特定于操作系统的路径语法。
 	 * 使用此命令，客户端可以确定服务器是否支持这种简化的路径表示。此命令通常用于改善客户端和服务器之间路径处理的兼容性。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc3659">RFC 3659</a>
 	 */
 	TRIVIAL_VIRTUAL_FILE_STORE("TVFS"),
 	/**
@@ -247,6 +315,8 @@ public enum Command {
 	 *
 	 * <p>此命令要求服务器为指定的目录发送一个机器可解析的目录列表。与传统的LIST命令相比，MLST提供了一种标准化的文件和目录的信息表示，
 	 * 使客户端能够以一种可预测的格式解析目录列表。MLST命令的输出旨在由客户端软件解析，而不是直接展示给用户。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc3659">RFC 3659</a>
 	 */
 	MACHINE_LIST("MLST"),
 	/**
@@ -254,6 +324,8 @@ public enum Command {
 	 *
 	 * <p>此命令要求服务器为指定的目录发送一个完整的机器可解析的目录列表，包括所有子目录和文件。MLSD是MLST命令的扩展，
 	 * 它提供了一种获取目录及其所有内容的详细信息的方法。与MLST类似，MLSD命令的输出设计为由客户端软件解析。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc3659">RFC 3659</a>
 	 */
 	MACHINE_LIST_DICTIONARY("MLSD"),
 	/**
@@ -261,6 +333,8 @@ public enum Command {
 	 *
 	 * <p>此命令允许客户端指定服务器应连接的IP地址和端口号，以便进行数据传输。EPRT命令是传统PORT命令的扩展，
 	 * 它支持包括IPv6在内的扩展网络地址格式。此命令使得FTP传输能够在更多种类的网络环境中工作，特别是在需要处理IPv6地址时。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc2428">RFC 2428</a>
 	 */
 	EXTENDED_PORT("EPRT"),
 	/**
@@ -268,8 +342,28 @@ public enum Command {
 	 *
 	 * <p>此命令请求服务器监听一个数据端口并等待客户端连接，而不是主动连接到客户端指定的端口。
 	 * EPSV命令是传统PASV（被动模式）命令的扩展，它提供了一种与EPRT命令兼容的被动连接建立方式。EPSV命令特别适用于处理IPv6以及网络地址转换（NAT）场景。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc2428">RFC 2428</a>
 	 */
-	EXTENDED_PASSIVE_MODE("EPSV");
+	EXTENDED_PASSIVE_MODE("EPSV"),
+	/**
+	 * 功能列表
+	 *
+	 * <p>此命令要求服务器列出所有支持的命令以及任何特定于服务器的功能。这有助于客户端自动发现服务器能力，
+	 * 并启用对特定FTP扩展的支持。FEAT命令的响应是一个多行回复，其中列出了服务器支持的所有功能和扩展。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc2389">RFC 2389</a>
+	 */
+	FEATURES("FEAT"),
+	/**
+	 * 选项设置
+	 *
+	 * <p>此命令用于启用或修改命令的特定选项。它允许客户端和服务器就使用特定FTP命令时的行为达成一致。
+	 * 例如，客户端可以使用OPTS命令为MLST或MLSD命令指定希望在响应中看到的确切信息类型。这提高了客户端和服务器之间的互操作性，并允许针对特定会话自定义行为。</p>
+	 *
+	 * @see <a href="https://tools.ietf.org/html/rfc2389">RFC 2389</a>
+	 */
+	OPTIONS("OPTS");
 
 
 	private final String cmdStr;

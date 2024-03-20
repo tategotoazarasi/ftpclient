@@ -2,7 +2,6 @@ package cn.jsou.ftpclient.ftp;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,7 +11,8 @@ import java.net.Socket;
 import static cn.jsou.ftpclient.ftp.Command.*;
 
 public class FtpClient {
-	private static final Logger logger = LogManager.getLogger(FtpClient.class);
+	private static final Logger     logger     = LogManager.getLogger(FtpClient.class);
+	public final         ServerInfo serverInfo = new ServerInfo();
 
 	private final String         server;
 	private final Socket         socket;
@@ -26,41 +26,55 @@ public class FtpClient {
 		this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 
 		// 处理服务器的欢迎信息
-		readMultilineResponse();
+		readResponse();
 	}
 
-	// 方法：读取多行响应并返回状态码
-	// 修改readMultilineResponse方法返回ReplyCode枚举类型
-	private ReplyCode readMultilineResponse() throws IOException {
-		String responseLine;
-		String statusCode = null;
+	private Response readResponse() throws IOException {
+		StringBuilder responseBuilder = new StringBuilder();
+		String        responseLine;
+		String        statusCode      = null;
 
+		// 读取第一行响应
 		responseLine = reader.readLine();
-		logger.info("Server response: {}", responseLine);
-		if (responseLine.matches("^\\d{3}-.*")) {
+		logger.info("Server response:\t{}", responseLine);
+
+		// 确定是否为多行响应
+		boolean isMultiline = responseLine.matches("^\\d{3}-.*");
+		if (isMultiline) {
 			statusCode = responseLine.substring(0, 3);
+			// 对于多行响应的第一行，去除状态码和空格后追加剩余文本
+			responseBuilder.append(responseLine.substring(4));
+
 			while ((responseLine = reader.readLine()) != null) {
-				logger.info("Server response: {}", responseLine);
+				logger.info("Server response:\t{}", responseLine);
+				// 对于最后一行响应，判断是否以状态码开头，如果是则去除状态码和空格
 				if (responseLine.startsWith(statusCode + " ")) {
+					responseBuilder.append("\n").append(responseLine.substring(4));
 					break;
+				} else {
+					// 对于中间行，直接追加
+					responseBuilder.append("\n").append(responseLine);
 				}
 			}
 		} else if (responseLine.matches("^\\d{3} .*")) {
-			// 对于非多行响应，直接返回状态码
+			// 对于非多行响应，直接返回状态码后的文本
 			statusCode = responseLine.substring(0, 3);
+			responseBuilder.append(responseLine.substring(4));
 		}
-		return ReplyCode.findByCode(statusCode); // 使用findByCode查找并返回ReplyCode枚举
+
+		// 构造并返回Response对象
+		return new Response(ReplyCode.findByCode(statusCode), responseBuilder.toString());
 	}
 
 	// 登录方法
 	public boolean login(String username, String password) throws IOException {
-		Pair<ReplyCode, Boolean> userResponseCode = userName(username);
-		if (Boolean.FALSE.equals(userResponseCode.getRight())) {
+		Response userResponse = userName(username);
+		if (Boolean.FALSE.equals(userResponse.isSuccess())) {
 			return false;
 		}
 
-		Pair<ReplyCode, Boolean> passResponseCode = password(password);
-		return passResponseCode.getRight();
+		Response passResponse = password(password);
+		return passResponse.isSuccess();
 	}
 
 	/**
@@ -71,11 +85,11 @@ public class FtpClient {
 	 *
 	 * @param username 一个Telnet字符串，用于识别用户。用户标识是服务器为访问其文件系统所需的。
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
 	 */
-	public Pair<ReplyCode, Boolean> userName(String username) throws IOException {
+	public Response userName(String username) throws IOException {
 		return sendCommand(USER_NAME, username);
 	}
 
@@ -86,11 +100,12 @@ public class FtpClient {
 	 *
 	 * @param password 一个指定用户密码的Telnet字符串
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> password(String password) throws IOException {
+	public Response password(String password) throws IOException {
 		return sendCommand(PASSWORD, password);
 	}
 
@@ -104,26 +119,21 @@ public class FtpClient {
 	 *
 	 * @param accountInformation 一个Telnet字符串，用于识别用户的账户
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> account(String accountInformation) throws IOException {
+	public Response account(String accountInformation) throws IOException {
 		return sendCommand(ACCOUNT, accountInformation);
 	}
 
-	private Pair<ReplyCode, Boolean> sendCommand(Command command, String... args) throws IOException {
+	private Response sendCommand(Command command, String... args) throws IOException {
 		String commandLine = command.getCommand() + " " + Joiner.on(" ").join(args) + "\r\n";
 		writer.print(commandLine);
 		writer.flush();
-		ReplyCode replyCode = readMultilineResponse();
-		ReplyType replyType = ReplyType.getReplyType(replyCode);
-		Boolean
-				isSuccess =
-				(replyType == ReplyType.POSITIVE_INTERMEDIATE ||
-				 replyType == ReplyType.POSITIVE_PRELIMINARY ||
-				 replyType == ReplyType.POSITIVE_COMPLETION);
-		return Pair.of(replyCode, isSuccess);
+		logger.info("Sent command:\t{}", commandLine);
+		return readResponse();
 	}
 
 	/**
@@ -131,11 +141,12 @@ public class FtpClient {
 	 *
 	 * <p>此命令导致在回复中返回当前工作目录的名称。</p>
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> printWorkingDirectory() throws IOException {
+	public Response printWorkingDirectory() throws IOException {
 		return sendCommand(PRINT_WORKING_DIRECTORY);
 	}
 
@@ -144,11 +155,12 @@ public class FtpClient {
 	 *
 	 * <p>此命令是CWD的特例，包含在内是为了简化在具有不同父目录命名语法的操作系统之间传输目录树的程序的实现。</p>
 	 *
-	 * @return 服务器的响应代码。回复代码应与CWD的回复代码相同。
+	 * @return 服务器的响应。回复代码应与CWD的回复代码相同。
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> changeToParentDirectory() throws IOException {
+	public Response changeToParentDirectory() throws IOException {
 		return sendCommand(CHANGE_TO_PARENT_DIRECTORY);
 	}
 
@@ -160,11 +172,12 @@ public class FtpClient {
 	 *
 	 * @param pathname 一个Telnet字符串，用于识别文件系统的文件组
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> structureMount(String pathname) throws IOException {
+	public Response structureMount(String pathname) throws IOException {
 		return sendCommand(STRUCTURE_MOUNT, pathname);
 	}
 
@@ -174,11 +187,12 @@ public class FtpClient {
 	 * <p>此命令终止一个USER会话，如果没有进行文件传输，服务器将关闭控制连接。如果文件传输正在进行中，连接将保持开放以等待结果响应，
 	 * 然后服务器将其关闭。如果用户进程为多个用户传输文件但不希望为每个用户关闭然后重新打开连接，则应使用REIN命令而不是QUIT。 控制连接上的意外关闭将导致服务器采取中止（ABOR）和注销（QUIT）的有效操作。</p>
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> logout() throws IOException {
+	public Response logout() throws IOException {
 		return sendCommand(LOGOUT);
 	}
 
@@ -188,12 +202,27 @@ public class FtpClient {
 	 * <p>此命令终止一个USER会话，清除所有I/O和账户信息，但允许任何正在进行的传输完成。
 	 * 所有参数重置为默认设置，控制连接保持开放。这与用户刚刚打开控制连接后发现的状态相同。预计之后会有一个USER命令。</p>
 	 *
-	 * @return 服务器的响应代码
+	 * @return 服务器的响应
 	 *
 	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
-	public Pair<ReplyCode, Boolean> reinitialize() throws IOException {
+	public Response reinitialize() throws IOException {
 		return sendCommand(REINITIALIZE);
+	}
+
+	/**
+	 * 系统
+	 *
+	 * <p>此命令用于找出服务器的操作系统类型。回复的第一个词应该是在当前版本的Assigned Numbers文档中列出的系统名称之一。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	public Response system() throws IOException {
+		return sendCommand(SYSTEM);
 	}
 
 	public void disconnect() {
