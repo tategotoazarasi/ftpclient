@@ -3,6 +3,8 @@ package cn.jsou.ftpclient.ftp;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
@@ -10,6 +12,8 @@ import java.net.Socket;
 import static cn.jsou.ftpclient.ftp.Command.*;
 
 public class FtpClient {
+	private static final Logger logger = LogManager.getLogger(FtpClient.class);
+
 	private final String         server;
 	private final Socket         socket;
 	private final BufferedReader reader;
@@ -32,11 +36,11 @@ public class FtpClient {
 		String statusCode = null;
 
 		responseLine = reader.readLine();
-		System.out.println("Server response: " + responseLine);
+		logger.info("Server response: {}", responseLine);
 		if (responseLine.matches("^\\d{3}-.*")) {
 			statusCode = responseLine.substring(0, 3);
 			while ((responseLine = reader.readLine()) != null) {
-				System.out.println("Server response: " + responseLine);
+				logger.info("Server response: {}", responseLine);
 				if (responseLine.startsWith(statusCode + " ")) {
 					break;
 				}
