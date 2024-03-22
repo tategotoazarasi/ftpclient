@@ -1,5 +1,6 @@
 package cn.jsou.ftpclient.ftp;
 
+import cn.jsou.ftpclient.ftp.handlers.ConnectionHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

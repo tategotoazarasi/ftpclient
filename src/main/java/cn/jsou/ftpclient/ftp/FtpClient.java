@@ -1,18 +1,16 @@
 package cn.jsou.ftpclient.ftp;
 
+import cn.jsou.ftpclient.ftp.handlers.MLSDHandler;
+import cn.jsou.ftpclient.vfs.VirtualFileSystem;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.VFS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FtpClient {
 	private static final Logger            logger     = LogManager.getLogger(FtpClient.class);
@@ -23,15 +21,14 @@ public class FtpClient {
 	private final        FtpCommands       ftpCommands;
 	private final        Thread            serverThread;
 	public               String            username;
-	public               FileSystemManager remoteFs   = VFS.getManager();
-	private              FileObject        wd         = remoteFs.resolveFile("ram:/");
+	public VirtualFileSystem remoteFs = new VirtualFileSystem();
 
 	public FtpClient(String server, String port) throws IOException {
 		this.server       = server;
 		this.serverSocket = new Socket(server, Integer.parseInt(port));
 		this.ftpCommands  = new FtpCommands(serverSocket);
 		this.dataServer   = new DataServer(serverSocket.getLocalAddress());
-		wd.createFolder();
+
 		// 在新线程中运行DataServer
 		this.serverThread = new Thread(dataServer);
 		this.serverThread.start();
@@ -82,8 +79,14 @@ public class FtpClient {
 
 		Response pwdResp = ftpCommands.printWorkingDirectory();
 		if (pwdResp.isSuccess()) {
-			wd = remoteFs.resolveFile("ram:/" + pwdResp.getMessage().trim());
-			wd.createFolder();
+			String message = pwdResp.getMessage().trim();
+			// 使用正则表达式提取被引号包裹的路径
+			Pattern pattern = Pattern.compile("\"([^\"]*)\"");
+			Matcher matcher = pattern.matcher(message);
+			if (matcher.find()) {
+				String path = matcher.group(1); // 获取第一个匹配的组，即被引号包裹的内容
+				remoteFs.changeDirectory(path);
+			}
 		}
 
 		Response typeResp = ftpCommands.representationType(TypeCode.IMAGE);
@@ -96,27 +99,12 @@ public class FtpClient {
 			logger.warn("Failed to set data port with reply code: {}", portResp.getReplyCode());
 		}
 
-		dataServer.registerConnectionHandler(socket -> {
-			try (InputStream inputStream = socket.getInputStream();
-			     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
-					// 打印从服务器接收到的每一行数据
-					logger.info(line);
-				}
-			} catch (IOException e) {
-				logger.error("Error handling MLSD data connection", e);
-			} finally {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					logger.error("Error closing data connection socket", e);
-				}
+		if (serverInfo.hasFeature("MLSD")) {
+			dataServer.registerConnectionHandler(new MLSDHandler(remoteFs));
+			Response mlsdResp = ftpCommands.machineListDictionary();
+			if (!mlsdResp.isSuccess()) {
+				logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
 			}
-		});
-		Response mlsdResp = ftpCommands.machineListDictionary();
-		if (!mlsdResp.isSuccess()) {
-			logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
 		}
 	}
 

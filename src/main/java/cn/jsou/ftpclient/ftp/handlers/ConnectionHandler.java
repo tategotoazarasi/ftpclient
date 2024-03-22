@@ -1,4 +1,4 @@
-package cn.jsou.ftpclient.ftp;
+package cn.jsou.ftpclient.ftp.handlers;
 
 import java.net.Socket;
 
