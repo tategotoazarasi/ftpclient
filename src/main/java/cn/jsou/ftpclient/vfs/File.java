@@ -17,6 +17,13 @@ public class File {
 		this.modifiedTime = LocalDateTime.now();
 	}
 
+	public File(String name, long size, LocalDateTime modifiedTime) {
+		this.name         = name;
+		this.size         = size;
+		this.createdTime  = LocalDateTime.now();
+		this.modifiedTime = modifiedTime;
+	}
+
 	public File(String name, Map<String, String> factsMap) {
 		this.name = name;
 		this.size = Long.parseLong(factsMap.getOrDefault("size", "0"));
