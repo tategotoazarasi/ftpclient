@@ -24,10 +24,18 @@ public class FileExplorerComponent extends JPanel {
 
 	private void initUI() {
 		setLayout(new BorderLayout());
-		fileTable = new JTable();
+		fileTable = new JTable() {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false; // 使表格不可编辑
+			}
+		};
+		fileTable.setShowGrid(false); // 去掉网格线
+		fileTable.setIntercellSpacing(new Dimension(0, 0)); // 去掉单元格间距
 		JScrollPane scrollPane = new JScrollPane(fileTable);
 		add(scrollPane, BorderLayout.CENTER);
 	}
+
 
 	public void updateFileList(String path) {
 		String[]          columnNames = {"Name", "Size", "Created Time", "Modified Time"};
@@ -46,5 +54,7 @@ public class FileExplorerComponent extends JPanel {
 
 		fileTable.setModel(model);
 		currentPath = path;
+
+		fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileCellRenderer());
 	}
 }
