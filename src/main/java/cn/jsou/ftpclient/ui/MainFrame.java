@@ -1,6 +1,8 @@
 package cn.jsou.ftpclient.ui;
 
 import cn.jsou.ftpclient.ftp.FtpClient;
+import cn.jsou.ftpclient.vfs.NativeFileSystemProvider;
+import cn.jsou.ftpclient.vfs.VirtualFileSystem;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,12 +10,13 @@ import java.awt.*;
 public class MainFrame extends JFrame {
 	private JTextField serverAddressField;
 
-	private JTextField     portField;
-	private JTextField     usernameField;
-	private JPasswordField passwordField;
-	private JButton        connectButton;
-	private JList<String>  localFileList;
-	private JList<String>  serverFileList;
+	private JTextField            portField;
+	private JTextField            usernameField;
+	private JPasswordField        passwordField;
+	private JButton               connectButton;
+	// 使用FileExplorerComponent替代原来的JList
+	private FileExplorerComponent localFileExplorer;
+	private FileExplorerComponent serverFileExplorer;
 
 	public MainFrame() {
 		setTitle("Java FTP Client");
@@ -46,14 +49,20 @@ public class MainFrame extends JFrame {
 
 		// Create the main split pane to show local and server files
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		localFileList  = new JList<>();
-		serverFileList = new JList<>();
 
-		// For demonstration, add some sample items to the lists
-		localFileList.setListData(new String[]{"Local File 1", "Local File 2"});
-		serverFileList.setListData(new String[]{"Server File 1", "Server File 2"});
+		// 初始化本地和服务器的FileExplorerComponent实例
+		localFileExplorer  = new FileExplorerComponent(new NativeFileSystemProvider(), "/");
+		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(), "/");
 
-		JScrollPane localScrollPane  = new JScrollPane(localFileList);
+		splitPane.setLeftComponent(localFileExplorer);
+		splitPane.setRightComponent(serverFileExplorer);
+		splitPane.setDividerLocation(400);
+
+		// Add top panel and split pane to the frame
+		getContentPane().add(topPanel, BorderLayout.NORTH);
+		getContentPane().add(splitPane, BorderLayout.CENTER);
+
+		/*JScrollPane localScrollPane  = new JScrollPane(localFileList);
 		JScrollPane serverScrollPane = new JScrollPane(serverFileList);
 		localScrollPane.setBorder(BorderFactory.createTitledBorder("Local Files"));
 		serverScrollPane.setBorder(BorderFactory.createTitledBorder("Server Files"));
@@ -64,7 +73,7 @@ public class MainFrame extends JFrame {
 
 		// Add top panel and split pane to the frame
 		getContentPane().add(topPanel, BorderLayout.NORTH);
-		getContentPane().add(splitPane, BorderLayout.CENTER);
+		getContentPane().add(splitPane, BorderLayout.CENTER);*/
 	}
 
 	private void connectToFtp() {

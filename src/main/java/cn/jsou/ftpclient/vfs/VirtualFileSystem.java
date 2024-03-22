@@ -1,8 +1,10 @@
 package cn.jsou.ftpclient.vfs;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public class VirtualFileSystem {
+public class VirtualFileSystem implements FileSystemProvider {
 	private final Directory root; // 根目录
 	private       Directory currentDirectory; // 当前目录
 
@@ -65,7 +67,6 @@ public class VirtualFileSystem {
 		}
 	}
 
-
 	// 获取当前目录路径
 	public String getCurrentDirectoryPath() {
 		StringBuilder path = new StringBuilder();
@@ -76,5 +77,13 @@ public class VirtualFileSystem {
 			if (temp != null) path.insert(0, "/");
 		}
 		return path.toString();
+	}
+
+	@Override public List<String> getDirectories(String path) {
+		return new ArrayList<>(currentDirectory.directories.keySet());
+	}
+
+	@Override public List<File> getFiles(String path) {
+		return new ArrayList<>(currentDirectory.files.values());
 	}
 }

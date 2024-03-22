@@ -30,4 +30,20 @@ public class Directory {
 		directory.parent = this;
 		return directory;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Map<String, File> getFiles() {
+		return files;
+	}
+
+	public Map<String, Directory> getDirectories() {
+		return directories;
+	}
+
+	public Directory getParent() {
+		return parent;
+	}
 }

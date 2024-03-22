@@ -26,4 +26,21 @@ public class File {
 		this.createdTime  =
 				LocalDateTime.parse(factsMap.getOrDefault("create", LocalDateTime.now().format(formatter)), formatter);
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public LocalDateTime getModifiedTime() {
+		return modifiedTime;
+	}
+
+	public LocalDateTime getCreatedTime() {
+		return createdTime;
+	}
+
 }
