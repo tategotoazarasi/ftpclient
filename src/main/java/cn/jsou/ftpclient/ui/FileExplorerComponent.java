@@ -1,7 +1,9 @@
 package cn.jsou.ftpclient.ui;
 
+import cn.jsou.ftpclient.utils.TimeUtils;
 import cn.jsou.ftpclient.vfs.File;
 import cn.jsou.ftpclient.vfs.FileSystemProvider;
+import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -47,9 +49,9 @@ public class FileExplorerComponent extends JPanel {
 		List<File> files = fileSystemProvider.getFiles(path);
 		files.forEach(file -> model.addRow(new Object[]{
 				file.getName(),
-				file.getSize() + " bytes",
-				dateTimeFormatter.format(file.getCreatedTime()),
-				dateTimeFormatter.format(file.getModifiedTime())
+				FileUtils.byteCountToDisplaySize(file.getSize()),
+				TimeUtils.formatRelativeTime(file.getCreatedTime()),
+				TimeUtils.formatRelativeTime(file.getModifiedTime())
 		}));
 
 		fileTable.setModel(model);
