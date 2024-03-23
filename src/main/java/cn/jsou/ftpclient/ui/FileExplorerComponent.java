@@ -40,7 +40,7 @@ public class FileExplorerComponent extends JPanel {
 
 
 	public void updateFileList(String path) {
-		String[] columnNames = {"Name", "Size", "Modified Time"};
+		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
 		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
 
 		java.util.List<String> directories = fileSystemProvider.getDirectories(path);
@@ -50,7 +50,7 @@ public class FileExplorerComponent extends JPanel {
 		files.forEach(file -> model.addRow(new Object[]{
 				file.getName(),
 				FileUtils.byteCountToDisplaySize(file.getSize()),
-				//TimeUtils.formatRelativeTime(file.getCreatedTime()),
+				TimeUtils.formatRelativeTime(file.getCreatedTime()),
 				TimeUtils.formatRelativeTime(file.getModifiedTime())
 		}));
 

@@ -17,10 +17,10 @@ public class File {
 		this.modifiedTime = LocalDateTime.now();
 	}
 
-	public File(String name, long size, LocalDateTime modifiedTime) {
+	public File(String name, long size, LocalDateTime modifiedTime, LocalDateTime createdTime) {
 		this.name         = name;
 		this.size         = size;
-		this.createdTime  = LocalDateTime.now();
+		this.createdTime = createdTime;
 		this.modifiedTime = modifiedTime;
 	}
 

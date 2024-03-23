@@ -4,7 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.time.Instant;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
@@ -27,11 +30,25 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 
 		return Arrays.stream(file.listFiles(File::isFile))
 		             .map(f -> {
-			             return new cn.jsou.ftpclient.vfs.File(f.getName(),
-			                                                   f.length(),
-			                                                   Instant.ofEpochMilli(f.lastModified())
-			                                                          .atZone(ZoneId.systemDefault())
-			                                                          .toLocalDateTime());
+			             try {
+				             BasicFileAttributes
+						             attrs =
+						             Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+				             LocalDateTime
+						             modifiedTime =
+						             attrs.lastModifiedTime()
+						                  .toInstant()
+						                  .atZone(ZoneId.systemDefault())
+						                  .toLocalDateTime();
+				             LocalDateTime
+						             creationTime =
+						             attrs.creationTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+				             return new cn.jsou.ftpclient.vfs.File(f.getName(),
+				                                                   f.length(), modifiedTime, creationTime);
+			             } catch (IOException e) {
+				             logger.error("Failed to read file attributes", e);
+				             return null;
+			             }
 		             })
 		             .collect(Collectors.toList());
 	}
