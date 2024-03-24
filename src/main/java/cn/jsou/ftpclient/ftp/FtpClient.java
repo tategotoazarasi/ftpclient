@@ -1,5 +1,6 @@
 package cn.jsou.ftpclient.ftp;
 
+import cn.jsou.ftpclient.ftp.handlers.ConnectionHandler;
 import cn.jsou.ftpclient.ftp.handlers.MLSDHandler;
 import cn.jsou.ftpclient.vfs.VirtualFileSystem;
 import org.apache.commons.io.IOUtils;
@@ -15,13 +16,13 @@ import java.util.regex.Pattern;
 public class FtpClient {
 	private static final Logger            logger     = LogManager.getLogger(FtpClient.class);
 	public final         ServerInfo        serverInfo = new ServerInfo();
+	public final DataServer        dataServer;
 	private final        String            server;
 	private final        Socket            serverSocket;
-	private final        DataServer        dataServer;
 	private final        FtpCommands       ftpCommands;
 	private final        Thread            serverThread;
 	public               String            username;
-	public VirtualFileSystem remoteFs = new VirtualFileSystem();
+	public       VirtualFileSystem remoteFs = new VirtualFileSystem();
 
 	public FtpClient(String server, String port) throws IOException {
 		this.server       = server;
@@ -100,7 +101,8 @@ public class FtpClient {
 		}
 
 		if (serverInfo.hasFeature("MLSD")) {
-			dataServer.registerConnectionHandler(new MLSDHandler(remoteFs));
+			ConnectionHandler ch = new MLSDHandler(remoteFs);
+			dataServer.registerConnectionHandler(ch);
 			Response mlsdResp = ftpCommands.machineListDictionary();
 			if (!mlsdResp.isSuccess()) {
 				logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
@@ -108,7 +110,7 @@ public class FtpClient {
 		}
 	}
 
-	public void close() throws InterruptedException {
+	public void close() throws InterruptedException, IOException {
 		ftpCommands.close();
 		IOUtils.closeQuietly(serverSocket);
 		dataServer.close();

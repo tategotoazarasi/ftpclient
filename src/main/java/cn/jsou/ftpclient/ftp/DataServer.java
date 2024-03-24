@@ -47,4 +47,8 @@ public class DataServer implements Runnable {
 			IOUtils.closeQuietly(serverSocket);
 		}
 	}
+
+	public void waitHandlerComplete() throws InterruptedException {
+		connectionHandler.waitForCompletion();
+	}
 }

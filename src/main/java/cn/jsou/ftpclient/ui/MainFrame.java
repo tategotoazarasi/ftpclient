@@ -61,19 +61,6 @@ public class MainFrame extends JFrame {
 		// Add top panel and split pane to the frame
 		getContentPane().add(topPanel, BorderLayout.NORTH);
 		getContentPane().add(splitPane, BorderLayout.CENTER);
-
-		/*JScrollPane localScrollPane  = new JScrollPane(localFileList);
-		JScrollPane serverScrollPane = new JScrollPane(serverFileList);
-		localScrollPane.setBorder(BorderFactory.createTitledBorder("Local Files"));
-		serverScrollPane.setBorder(BorderFactory.createTitledBorder("Server Files"));
-
-		splitPane.setLeftComponent(localScrollPane);
-		splitPane.setRightComponent(serverScrollPane);
-		splitPane.setDividerLocation(400);
-
-		// Add top panel and split pane to the frame
-		getContentPane().add(topPanel, BorderLayout.NORTH);
-		getContentPane().add(splitPane, BorderLayout.CENTER);*/
 	}
 
 	private void connectToFtp() {
@@ -96,6 +83,9 @@ public class MainFrame extends JFrame {
 				                              JOptionPane.ERROR_MESSAGE);
 			}
 			ftpClient.init();
+			ftpClient.dataServer.waitHandlerComplete();
+			serverFileExplorer.setFileSystemProvider(ftpClient.remoteFs);
+			serverFileExplorer.updateFileList(ftpClient.remoteFs.getCurrentDirectoryPath());
 		} catch (Exception ex) {
 			JOptionPane.showMessageDialog(this, "登录失败：" + ex.getMessage(), "登录失败", JOptionPane.ERROR_MESSAGE);
 		}

@@ -8,14 +8,12 @@ import org.apache.commons.io.FileUtils;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class FileExplorerComponent extends JPanel {
-	private static final DateTimeFormatter  dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	private final        FileSystemProvider fileSystemProvider;
-	private              JTable             fileTable;
-	private              String             currentPath;
+	private FileSystemProvider fileSystemProvider;
+	private JTable             fileTable;
+	private String             currentPath;
 
 	public FileExplorerComponent(FileSystemProvider fileSystemProvider, String initialPath) {
 		this.fileSystemProvider = fileSystemProvider;
@@ -38,7 +36,6 @@ public class FileExplorerComponent extends JPanel {
 		add(scrollPane, BorderLayout.CENTER);
 	}
 
-
 	public void updateFileList(String path) {
 		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
 		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
@@ -58,5 +55,14 @@ public class FileExplorerComponent extends JPanel {
 		currentPath = path;
 
 		fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileCellRenderer());
+		this.repaint();
+	}
+
+	public void setFileSystemProvider(FileSystemProvider fsp) {
+		this.fileSystemProvider = fsp;
+	}
+
+	public String getCurrentPath() {
+		return currentPath;
 	}
 }
