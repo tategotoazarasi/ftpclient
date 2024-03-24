@@ -52,7 +52,7 @@ public class MainFrame extends JFrame {
 
 		// 初始化本地和服务器的FileExplorerComponent实例
 		localFileExplorer  = new FileExplorerComponent(new NativeFileSystemProvider(), "/");
-		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(), "/");
+		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/");
 
 		splitPane.setLeftComponent(localFileExplorer);
 		splitPane.setRightComponent(serverFileExplorer);

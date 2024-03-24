@@ -58,5 +58,4 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		java.io.File file = new java.io.File(path);
 		return file.isDirectory();
 	}
-
 }

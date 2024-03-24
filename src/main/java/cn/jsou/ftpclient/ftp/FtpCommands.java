@@ -148,6 +148,21 @@ public class FtpCommands {
 	}
 
 	/**
+	 * 更改到父目录
+	 *
+	 * <p>此命令是CWD的特例，包含在内是为了简化在具有不同父目录命名语法的操作系统之间传输目录树的程序的实现。
+	 * 回复代码应与CWD的回复代码相同。有关更多详细信息，请参见附录II。</p>
+	 *
+	 * @return 服务器的响应。回复代码应与CWD的回复代码相同。
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response changeWorkingDirectory(String pathname) throws IOException {
+		return sendCommand(CHANGE_WORKING_DIRECTORY, pathname);
+	}
+
+	/**
 	 * 结构挂载
 	 *
 	 * <p>此命令允许用户在不更改其登录或账户信息的情况下，挂载不同的文件系统数据结构。

@@ -22,7 +22,7 @@ public class FtpClient {
 	private final        FtpCommands       ftpCommands;
 	private final        Thread            serverThread;
 	public               String            username;
-	public       VirtualFileSystem remoteFs = new VirtualFileSystem();
+	public       VirtualFileSystem remoteFs = new VirtualFileSystem(this);
 
 	public FtpClient(String server, String port) throws IOException {
 		this.server       = server;
@@ -100,17 +100,32 @@ public class FtpClient {
 			logger.warn("Failed to set data port with reply code: {}", portResp.getReplyCode());
 		}
 
-		if (serverInfo.hasFeature("MLSD")) {
-			ConnectionHandler ch = new MLSDHandler(remoteFs);
-			dataServer.registerConnectionHandler(ch);
-			Response mlsdResp = ftpCommands.machineListDictionary();
-			if (!mlsdResp.isSuccess()) {
-				logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
-			}
-		}
+		machineListDictionary(remoteFs.getCurrentDirectoryPath());
 	}
 
-	public void close() throws InterruptedException, IOException {
+	public boolean machineListDictionary(String name) throws IOException {
+		Response cwdResp = ftpCommands.changeWorkingDirectory(name);
+		if (!cwdResp.isSuccess()) {
+			logger.warn("Failed to change working directory to {} with reply code: {}", name, cwdResp.getReplyCode());
+		} else {
+			String tmp = remoteFs.getCurrentDirectoryPath();
+			remoteFs.changeDirectory(remoteFs.getSubDirectory(name));
+			if (serverInfo.hasFeature("MLSD")) {
+				ConnectionHandler ch = new MLSDHandler(remoteFs);
+				dataServer.registerConnectionHandler(ch);
+				Response mlsdResp = ftpCommands.machineListDictionary();
+				if (!mlsdResp.isSuccess()) {
+					logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
+					remoteFs.createDirectory(tmp);
+					return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void close() throws InterruptedException {
 		ftpCommands.close();
 		IOUtils.closeQuietly(serverSocket);
 		dataServer.close();

@@ -1,16 +1,29 @@
 package cn.jsou.ftpclient.vfs;
 
+import cn.jsou.ftpclient.ftp.FtpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public class VirtualFileSystem implements FileSystemProvider {
-	private final Directory root; // 根目录
-	private       Directory currentDirectory; // 当前目录
+	private static final Logger    logger = LogManager.getLogger(VirtualFileSystem.class);
+	private final        Directory root; // 根目录
+	private final        FtpClient ftpClient;
+	private              Directory currentDirectory; // 当前目录
 
-	public VirtualFileSystem() {
+	public VirtualFileSystem(FtpClient ftpClient) {
 		this.root             = new Directory("/");
 		this.currentDirectory = root;
+		this.ftpClient = ftpClient;
+	}
+
+	public Directory getSubDirectory(String name) {
+		return currentDirectory.getDirectories().get(name);
 	}
 
 	// 创建目录
@@ -40,6 +53,10 @@ public class VirtualFileSystem implements FileSystemProvider {
 
 		// 递归创建/获取下一个目录
 		return createOrGetDirectory(nextDir, pathComponents, index + 1);
+	}
+
+	public void changeDirectory(Directory dir) {
+		this.currentDirectory = dir;
 	}
 
 	// 切换目录
@@ -80,11 +97,27 @@ public class VirtualFileSystem implements FileSystemProvider {
 	}
 
 	@Override public List<String> getDirectories(String path) {
-		return new ArrayList<>(currentDirectory.directories.keySet());
+		if (ftpClient == null) {return Collections.emptyList();}
+		try {
+			ftpClient.machineListDictionary(path);
+			changeDirectory(path);
+			return new ArrayList<>(currentDirectory.directories.keySet());
+		} catch (IOException e) {
+			logger.error("Failed to list directories", e);
+			return Collections.emptyList();
+		}
 	}
 
 	@Override public List<File> getFiles(String path) {
-		return new ArrayList<>(currentDirectory.files.values());
+		if (ftpClient == null) {return Collections.emptyList();}
+		try {
+			ftpClient.machineListDictionary(path);
+			changeDirectory(path);
+			return new ArrayList<>(currentDirectory.files.values());
+		} catch (IOException e) {
+			logger.error("Failed to list directories", e);
+			return Collections.emptyList();
+		}
 	}
 
 	@Override

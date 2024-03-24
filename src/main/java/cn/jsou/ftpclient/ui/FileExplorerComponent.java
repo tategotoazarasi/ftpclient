@@ -68,8 +68,10 @@ public class FileExplorerComponent extends JPanel {
 				if (e.getClickCount() == 2) { // 双击事件
 					int row = fileTable.rowAtPoint(e.getPoint());
 					if (row >= 0) {
-						String name    = (String) fileTable.getModel().getValueAt(row, 0); // 获取双击的行的“Name”列的值
-						String newPath = currentPath + '/' + name; // 假设为简单路径拼接，根据您的实际情况调整
+						String name = (String) fileTable.getModel().getValueAt(row, 0); // 获取双击的行的“Name”列的值
+						String
+								newPath =
+								currentPath + (currentPath.endsWith("/") ? "" : '/') + name; // 假设为简单路径拼接，根据您的实际情况调整
 						// 判断是否为目录
 						if (fileSystemProvider.isDirectory(newPath)) {
 							updateFileList(newPath); // 更新文件列表为新的目录路径
@@ -87,5 +89,4 @@ public class FileExplorerComponent extends JPanel {
 	public String getCurrentPath() {
 		return currentPath;
 	}
-
 }
