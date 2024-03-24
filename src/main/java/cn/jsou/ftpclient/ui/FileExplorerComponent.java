@@ -26,6 +26,52 @@ public class FileExplorerComponent extends JPanel {
 
 	private void initUI() {
 		setLayout(new BorderLayout());
+
+		// 创建按钮并添加到工具栏
+		JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+		JButton btnGoUp = new JButton();
+		btnGoUp.setIcon(SvgIconLoader.loadSvgIcon("/up-icon.svg", 24));
+		btnGoUp.setToolTipText("上一级");
+
+		JButton btnNewFolder = new JButton();
+		btnNewFolder.setIcon(SvgIconLoader.loadSvgIcon("/new-folder-icon.svg", 24));
+		btnNewFolder.setToolTipText("新建目录");
+
+		JButton btnRename = new JButton();
+		btnRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 24));
+		btnRename.setToolTipText("重命名");
+
+		JButton btnDelete = new JButton();
+		btnDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 24));
+		btnDelete.setToolTipText("删除");
+
+		JButton btnUploadDownload = new JButton();
+		btnUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 24));
+		btnUploadDownload.setToolTipText("上传/下载");
+
+		JButton btnRefresh = new JButton();
+		btnRefresh.setIcon(SvgIconLoader.loadSvgIcon("/refresh-icon.svg", 24));
+		btnRefresh.setToolTipText("刷新");
+
+		// 添加按钮到工具栏
+		toolBar.add(btnGoUp);
+		toolBar.add(btnNewFolder);
+		toolBar.add(btnRename);
+		toolBar.add(btnDelete);
+		toolBar.add(btnUploadDownload);
+		toolBar.add(btnRefresh);
+
+		// 添加动作监听器 - 暂时为空，等待实现
+		btnGoUp.addActionListener(e -> {});
+		btnNewFolder.addActionListener(e -> {});
+		btnRename.addActionListener(e -> {});
+		btnDelete.addActionListener(e -> {});
+		btnUploadDownload.addActionListener(e -> {});
+
+		// 将工具栏添加到主面板的顶部
+		add(toolBar, BorderLayout.NORTH);
+
 		fileTable = new JTable() {
 			@Override
 			public boolean isCellEditable(int row, int column) {
