@@ -16,13 +16,13 @@ import java.util.regex.Pattern;
 public class FtpClient {
 	private static final Logger            logger     = LogManager.getLogger(FtpClient.class);
 	public final         ServerInfo        serverInfo = new ServerInfo();
-	public final DataServer        dataServer;
 	private final        String            server;
 	private final        Socket            serverSocket;
 	private final        FtpCommands       ftpCommands;
 	private final        Thread            serverThread;
+	public DataServer        dataServer;
 	public               String            username;
-	public       VirtualFileSystem remoteFs = new VirtualFileSystem(this);
+	public VirtualFileSystem remoteFs = new VirtualFileSystem(this);
 
 	public FtpClient(String server, String port) throws IOException {
 		this.server       = server;
@@ -109,15 +109,25 @@ public class FtpClient {
 			logger.warn("Failed to change working directory to {} with reply code: {}", name, cwdResp.getReplyCode());
 		} else {
 			String tmp = remoteFs.getCurrentDirectoryPath();
-			remoteFs.changeDirectory(remoteFs.getSubDirectory(name));
+			remoteFs.changeDirectory(name);
+			Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
+			if (!portResp.isSuccess()) {
+				logger.warn("Failed to set data port with reply code: {}", portResp.getReplyCode());
+			}
 			if (serverInfo.hasFeature("MLSD")) {
+				//dataServer = new DataServer(serverSocket.getLocalAddress());
 				ConnectionHandler ch = new MLSDHandler(remoteFs);
-				dataServer.registerConnectionHandler(ch);
+				dataServer.setConnectionHandler(ch);
 				Response mlsdResp = ftpCommands.machineListDictionary();
 				if (!mlsdResp.isSuccess()) {
 					logger.warn("Failed to enable MLSD support with reply code: {}", mlsdResp.getReplyCode());
 					remoteFs.createDirectory(tmp);
 					return false;
+				}
+				try {
+					ch.waitForCompletion();
+				} catch (InterruptedException e) {
+					logger.error("Failed to wait for data server to complete", e);
 				}
 				return true;
 			}

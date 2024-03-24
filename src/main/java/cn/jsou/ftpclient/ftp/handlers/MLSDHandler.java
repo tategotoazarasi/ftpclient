@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
 public class MLSDHandler implements ConnectionHandler {
@@ -24,42 +23,40 @@ public class MLSDHandler implements ConnectionHandler {
 		this.vfs = vfs;
 	}
 
-	@Override public CompletableFuture<Void> handleConnection(Socket socket) {
-		return CompletableFuture.runAsync(() -> {
-			try (InputStream inputStream = socket.getInputStream();
-			     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-				String line;
-				while ((line = reader.readLine()) != null) {
-					line = line.trim();
-					logger.debug("MLSD line: {}", line);
-					String[]            facts    = line.split(";");
-					String              filename = facts[facts.length - 1].trim();
-					Map<String, String> factsMap = new HashMap<>();
-					for (String fact : facts) {
-						int equalsIndex = fact.indexOf('=');
-						if (equalsIndex != -1) {
-							String key   = fact.substring(0, equalsIndex);
-							String value = fact.substring(equalsIndex + 1);
-							factsMap.put(key, value);
-						}
-					}
-					if (factsMap.containsKey("type") && factsMap.get("type").equals("dir")) {
-						vfs.createDirectory(filename);
-					} else if (factsMap.containsKey("type") && factsMap.get("type").equals("file")) {
-						vfs.createFile(filename, factsMap);
+	@Override public void handleConnection(Socket socket) {
+		try (InputStream inputStream = socket.getInputStream();
+		     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+				logger.debug("MLSD line: {}", line);
+				String[]            facts    = line.split(";");
+				String              filename = facts[facts.length - 1].trim();
+				Map<String, String> factsMap = new HashMap<>();
+				for (String fact : facts) {
+					int equalsIndex = fact.indexOf('=');
+					if (equalsIndex != -1) {
+						String key   = fact.substring(0, equalsIndex);
+						String value = fact.substring(equalsIndex + 1);
+						factsMap.put(key, value);
 					}
 				}
-			} catch (IOException e) {
-				logger.error("Error handling MLSD data connection", e);
-			} finally {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					logger.error("Error closing data connection socket", e);
+				if (factsMap.containsKey("type") && factsMap.get("type").equals("dir")) {
+					vfs.createDirectory(filename);
+				} else if (factsMap.containsKey("type") && factsMap.get("type").equals("file")) {
+					vfs.createFile(filename, factsMap);
 				}
-				latch.countDown(); // 处理完成，计数减1
 			}
-		});
+		} catch (IOException e) {
+			logger.error("Error handling MLSD data connection", e);
+		} finally {
+			try {
+				socket.close();
+			} catch (IOException e) {
+				logger.error("Error closing data connection socket", e);
+			}
+			latch.countDown(); // 处理完成，计数减1
+		}
 	}
 
 	@Override public void waitForCompletion() throws InterruptedException {

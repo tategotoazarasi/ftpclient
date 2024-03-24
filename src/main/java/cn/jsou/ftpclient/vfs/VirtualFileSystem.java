@@ -22,10 +22,6 @@ public class VirtualFileSystem implements FileSystemProvider {
 		this.ftpClient = ftpClient;
 	}
 
-	public Directory getSubDirectory(String name) {
-		return currentDirectory.getDirectories().get(name);
-	}
-
 	// 创建目录
 	public void createDirectory(String name) {
 		currentDirectory.createDirectory(name);

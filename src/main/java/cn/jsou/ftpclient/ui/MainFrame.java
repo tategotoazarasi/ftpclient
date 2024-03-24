@@ -3,12 +3,15 @@ package cn.jsou.ftpclient.ui;
 import cn.jsou.ftpclient.ftp.FtpClient;
 import cn.jsou.ftpclient.vfs.NativeFileSystemProvider;
 import cn.jsou.ftpclient.vfs.VirtualFileSystem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainFrame extends JFrame {
-	private JTextField serverAddressField;
+	private static final Logger     logger = LogManager.getLogger(MainFrame.class);
+	private              JTextField serverAddressField;
 
 	private JTextField            portField;
 	private JTextField            usernameField;
@@ -34,6 +37,13 @@ public class MainFrame extends JFrame {
 		usernameField      = new JTextField(10);
 		passwordField      = new JPasswordField(10);
 		connectButton      = new JButton("Connect");
+
+		//DEBUG
+		serverAddressField.setText("172.17.0.2");
+		portField.setText("21");
+		usernameField.setText("user");
+		passwordField.setText("password");
+		//DEBUG
 
 		connectButton.addActionListener(e -> connectToFtp());
 
@@ -87,7 +97,8 @@ public class MainFrame extends JFrame {
 			serverFileExplorer.setFileSystemProvider(ftpClient.remoteFs);
 			serverFileExplorer.updateFileList(ftpClient.remoteFs.getCurrentDirectoryPath());
 		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(this, "登录失败：" + ex.getMessage(), "登录失败", JOptionPane.ERROR_MESSAGE);
+			logger.error("错误：{}", ex.getMessage());
+			JOptionPane.showMessageDialog(this, "错误：" + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

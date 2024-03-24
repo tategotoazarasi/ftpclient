@@ -21,7 +21,7 @@ public class DataServer implements Runnable {
 	}
 
 	// 注册处理函数
-	public void registerConnectionHandler(ConnectionHandler handler) {
+	public void setConnectionHandler(ConnectionHandler handler) {
 		this.connectionHandler = handler;
 	}
 

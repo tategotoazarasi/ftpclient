@@ -39,9 +39,7 @@ public class Directory {
 		return files;
 	}
 
-	public Map<String, Directory> getDirectories() {
-		return directories;
-	}
+	public Map<String, Directory> getDirectories() {return directories;}
 
 	public Directory getParent() {
 		return parent;
