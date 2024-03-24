@@ -83,6 +83,30 @@ public class FileExplorerComponent extends JPanel {
 		JScrollPane scrollPane = new JScrollPane(fileTable);
 		add(scrollPane, BorderLayout.CENTER);
 		addTableMouseListener(); // 添加鼠标事件监听器
+
+		// 在这里初始化右键菜单
+		JPopupMenu popupMenu = createTablePopupMenu();
+		fileTable.addMouseListener(new MouseAdapter() {
+			// 保留双击事件的处理
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// 双击事件处理代码...
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		});
 	}
 
 	public void updateFileList(String path) {
@@ -125,7 +149,61 @@ public class FileExplorerComponent extends JPanel {
 					}
 				}
 			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				showPopupMenu(e);
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				showPopupMenu(e);
+			}
+
+			private void showPopupMenu(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					// 在弹出菜单之前，确保点击的行被选中
+					int rowAtPoint = fileTable.rowAtPoint(e.getPoint());
+					if (rowAtPoint > -1 && rowAtPoint < fileTable.getRowCount()) {
+						fileTable.setRowSelectionInterval(rowAtPoint, rowAtPoint);
+					} else {
+						fileTable.clearSelection();
+					}
+
+					// 获取弹出菜单并显示
+					JPopupMenu popupMenu = createTablePopupMenu();
+					popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
 		});
+	}
+
+	private JPopupMenu createTablePopupMenu() {
+		JPopupMenu popupMenu = new JPopupMenu();
+
+		JMenuItem menuItemRename = new JMenuItem("重命名");
+		menuItemRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 16)); // 设定合适的大小
+		menuItemRename.setToolTipText("重命名选定的文件或目录");
+
+		JMenuItem menuItemDelete = new JMenuItem("删除");
+		menuItemDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 16)); // 设定合适的大小
+		menuItemDelete.setToolTipText("删除选定的文件或目录");
+
+		JMenuItem menuItemUploadDownload = new JMenuItem("上传/下载");
+		menuItemUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 16)); // 设定合适的大小
+		menuItemUploadDownload.setToolTipText("上传或下载文件");
+
+		// 为菜单项添加动作监听器
+		menuItemRename.addActionListener(e -> {});
+		menuItemRename.addActionListener(e -> {});
+		menuItemDelete.addActionListener(e -> {});
+
+		// 将菜单项添加到弹出菜单
+		popupMenu.add(menuItemRename);
+		popupMenu.add(menuItemDelete);
+		popupMenu.add(menuItemUploadDownload);
+
+		return popupMenu;
 	}
 
 	public void setFileSystemProvider(FileSystemProvider fsp) {
@@ -135,4 +213,5 @@ public class FileExplorerComponent extends JPanel {
 	public String getCurrentPath() {
 		return currentPath;
 	}
+
 }
