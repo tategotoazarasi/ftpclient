@@ -86,4 +86,28 @@ public class VirtualFileSystem implements FileSystemProvider {
 	@Override public List<File> getFiles(String path) {
 		return new ArrayList<>(currentDirectory.files.values());
 	}
+
+	@Override
+	public boolean isDirectory(String path) {
+		// 根目录总是存在且是一个目录
+		if ("/".equals(path) || path.isEmpty()) {
+			return true;
+		}
+
+		String[]  pathComponents = path.split("/");
+		Directory dir            = root; // 从根目录开始遍历
+
+		// 遍历路径的每个组成部分，查找对应的目录
+		for (String component : pathComponents) {
+			if (!component.isEmpty()) { // 忽略空字符串（路径开头可能会有斜杠）
+				if (dir.directories.containsKey(component)) {
+					dir = dir.directories.get(component); // 进入下一级目录
+				} else {
+					return false; // 路径中的一部分不存在，或者不是一个目录
+				}
+			}
+		}
+
+		return true; // 成功遍历完整个路径，且每一部分都存在，因此这是一个目录
+	}
 }

@@ -52,4 +52,11 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		             })
 		             .collect(Collectors.toList());
 	}
+
+	@Override
+	public boolean isDirectory(String path) {
+		java.io.File file = new java.io.File(path);
+		return file.isDirectory();
+	}
+
 }
