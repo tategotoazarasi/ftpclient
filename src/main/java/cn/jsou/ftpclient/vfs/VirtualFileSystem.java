@@ -139,4 +139,18 @@ public class VirtualFileSystem implements FileSystemProvider {
 
 		return true; // 成功遍历完整个路径，且每一部分都存在，因此这是一个目录
 	}
+
+	@Override
+	public void refresh() {
+		if (ftpClient == null) {
+			return;
+		}
+		try {
+			String currentPath = getCurrentDirectoryPath();
+			ftpClient.machineListDictionary(currentPath);
+			changeDirectory(currentPath);
+		} catch (IOException e) {
+			logger.error("Failed to refresh the directory", e);
+		}
+	}
 }

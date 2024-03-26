@@ -15,7 +15,6 @@ import java.util.List;
 public class FileExplorerComponent extends JPanel {
 	JButton btnGoUp           = new JButton();
 	JButton btnNewFolder      = new JButton();
-	JButton btnRename         = new JButton();
 	JButton btnDelete         = new JButton();
 	JButton btnUploadDownload = new JButton();
 	JButton btnRefresh        = new JButton();
@@ -40,8 +39,6 @@ public class FileExplorerComponent extends JPanel {
 		btnGoUp.setToolTipText("上一级");
 		btnNewFolder.setIcon(SvgIconLoader.loadSvgIcon("/new-folder-icon.svg", 24));
 		btnNewFolder.setToolTipText("新建目录");
-		btnRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 24));
-		btnRename.setToolTipText("重命名");
 		btnDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 24));
 		btnDelete.setToolTipText("删除");
 		btnUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 24));
@@ -52,7 +49,6 @@ public class FileExplorerComponent extends JPanel {
 		// 添加按钮到工具栏
 		toolBar.add(btnGoUp);
 		toolBar.add(btnNewFolder);
-		//toolBar.add(btnRename);
 		toolBar.add(btnDelete);
 		toolBar.add(btnUploadDownload);
 		toolBar.add(btnRefresh);
@@ -60,9 +56,12 @@ public class FileExplorerComponent extends JPanel {
 		// 添加动作监听器 - 暂时为空，等待实现
 		btnGoUp.addActionListener(e -> {});
 		btnNewFolder.addActionListener(e -> {});
-		btnRename.addActionListener(e -> {});
 		btnDelete.addActionListener(e -> {});
 		btnUploadDownload.addActionListener(e -> {});
+		btnRefresh.addActionListener(e -> {
+			fileSystemProvider.refresh();
+			updateFileList(currentPath);
+		});
 
 		// 将工具栏添加到主面板的顶部
 		add(toolBar, BorderLayout.NORTH);
@@ -217,7 +216,6 @@ public class FileExplorerComponent extends JPanel {
 		// 根据是否有行被选中来启用或禁用按钮
 		btnUploadDownload.setEnabled(isRowSelected);
 		btnDelete.setEnabled(isRowSelected);
-		btnRename.setEnabled(isRowSelected);
 	}
 
 	public void setFileSystemProvider(FileSystemProvider fsp) {
