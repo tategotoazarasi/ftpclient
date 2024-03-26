@@ -2,6 +2,7 @@ package cn.jsou.ftpclient.ftp;
 
 import cn.jsou.ftpclient.ftp.handlers.ConnectionHandler;
 import cn.jsou.ftpclient.ftp.handlers.MLSDHandler;
+import cn.jsou.ftpclient.ftp.handlers.STORHandler;
 import cn.jsou.ftpclient.vfs.VirtualFileSystem;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -133,6 +134,27 @@ public class FtpClient {
 			}
 		}
 		return false;
+	}
+
+	public boolean uploadFile(java.io.File file) {
+		try {
+			Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
+			if (!portResp.isSuccess()) {
+				logger.error("Failed to set data port with reply code: {}", portResp.getReplyCode());
+				return false;
+			}
+			ConnectionHandler ch = new STORHandler(file);
+			dataServer.setConnectionHandler(ch);
+			Response storResp = ftpCommands.store(file.getName());
+			if (!storResp.isSuccess()) {
+				logger.error("Failed to store file with reply code: {}", storResp.getReplyCode());
+				return false;
+			}
+		} catch (IOException e) {
+			logger.error("Failed to upload file", e);
+			return false;
+		}
+		return true;
 	}
 
 	public void close() throws InterruptedException {

@@ -1,5 +1,6 @@
 package cn.jsou.ftpclient.ui;
 
+import cn.jsou.ftpclient.ftp.FtpClient;
 import cn.jsou.ftpclient.utils.TimeUtils;
 import cn.jsou.ftpclient.vfs.File;
 import cn.jsou.ftpclient.vfs.FileSystemProvider;
@@ -18,20 +19,29 @@ import java.util.Collections;
 import java.util.List;
 
 public class FileExplorerComponent extends JPanel {
+	private final MainFrame mainFrame;
 	JButton btnGoUp           = new JButton();
 	JButton btnNewFolder      = new JButton();
 	JButton btnDelete         = new JButton();
 	JButton btnUploadDownload = new JButton();
 	JButton btnRefresh        = new JButton();
-	private FileSystemProvider fileSystemProvider;
-	private JTable             fileTable;
-	private String             currentPath;
+	private boolean               isRemote = false;
+	private FileSystemProvider    fileSystemProvider;
+	private JTable                fileTable;
+	private String                currentPath;
+	private FtpClient             ftpClient;
+	private FileExplorerComponent peer;
 
-	public FileExplorerComponent(FileSystemProvider fileSystemProvider, String initialPath) {
+	public FileExplorerComponent(FileSystemProvider fileSystemProvider,
+	                             String initialPath,
+	                             boolean isRemote,
+	                             MainFrame mainFrame) {
 		this.fileSystemProvider = fileSystemProvider;
 		this.currentPath        = initialPath;
 		initUI();
 		updateFileList(initialPath);
+		this.isRemote  = isRemote;
+		this.mainFrame = mainFrame;
 	}
 
 	private void initUI() {
@@ -115,10 +125,7 @@ public class FileExplorerComponent extends JPanel {
 		});
 		btnDelete.addActionListener(e -> {});
 		btnUploadDownload.addActionListener(e -> {});
-		btnRefresh.addActionListener(e -> {
-			fileSystemProvider.refresh();
-			updateFileList(currentPath);
-		});
+		btnRefresh.addActionListener(e -> refresh());
 
 		// 将工具栏添加到主面板的顶部
 		add(toolBar, BorderLayout.NORTH);
@@ -169,6 +176,11 @@ public class FileExplorerComponent extends JPanel {
 		updateButtonStates();
 	}
 
+	public void refresh() {
+		updateFileList(currentPath);
+		updateFileList(currentPath);
+	}
+
 	public void updateFileList(String path) {
 		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
 		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
@@ -217,6 +229,69 @@ public class FileExplorerComponent extends JPanel {
 		this.repaint();
 	}
 
+	private JPopupMenu createTablePopupMenu() {
+		JPopupMenu popupMenu = new JPopupMenu();
+
+		JMenuItem menuItemRename = new JMenuItem("重命名");
+		menuItemRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 16)); // 设定合适的大小
+		menuItemRename.setToolTipText("重命名选定的文件或目录");
+
+		JMenuItem menuItemDelete = new JMenuItem("删除");
+		menuItemDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 16)); // 设定合适的大小
+		menuItemDelete.setToolTipText("删除选定的文件或目录");
+
+		JMenuItem menuItemUploadDownload = new JMenuItem("上传/下载");
+		menuItemUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 16)); // 设定合适的大小
+		menuItemUploadDownload.setToolTipText("上传或下载文件");
+
+		// 为菜单项添加动作监听器
+		menuItemRename.addActionListener(e -> {});
+		menuItemDelete.addActionListener(e -> {});
+		menuItemUploadDownload.addActionListener(e -> {
+			if (ftpClient == null) {
+				JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			if (!isRemote) {
+				// 获取选中的文件名
+				int selectedRow = fileTable.getSelectedRow();
+				if (selectedRow != -1) {
+					String fileName = (String) fileTable.getValueAt(selectedRow, 0);
+					Path   filePath = Paths.get(currentPath, fileName);
+
+					// 检查文件是否存在
+					java.io.File fileToUpload = filePath.toFile();
+					if (fileToUpload.exists() && fileToUpload.isFile()) {
+						// 在这里执行上传操作，假设有一个ftpClient对象可用
+						boolean success = ftpClient.uploadFile(fileToUpload);
+						if (success) {
+							ftpClient.dataServer.waitHandlerComplete();
+							peer.refresh();
+							JOptionPane.showMessageDialog(this,
+							                              "文件上传成功",
+							                              "成功",
+							                              JOptionPane.INFORMATION_MESSAGE);
+						} else {
+							JOptionPane.showMessageDialog(this, "文件上传失败", "错误", JOptionPane.ERROR_MESSAGE);
+						}
+					} else {
+						JOptionPane.showMessageDialog(this, "选中的文件不存在", "错误", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			} else {
+				// 可以在这里实现下载功能或其他操作
+			}
+		});
+
+
+		// 将菜单项添加到弹出菜单
+		popupMenu.add(menuItemRename);
+		popupMenu.add(menuItemDelete);
+		popupMenu.add(menuItemUploadDownload);
+
+		return popupMenu;
+	}
+
 	private void addTableMouseListener() {
 		fileTable.addMouseListener(new MouseAdapter() {
 			@Override
@@ -262,32 +337,8 @@ public class FileExplorerComponent extends JPanel {
 		});
 	}
 
-	private JPopupMenu createTablePopupMenu() {
-		JPopupMenu popupMenu = new JPopupMenu();
-
-		JMenuItem menuItemRename = new JMenuItem("重命名");
-		menuItemRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 16)); // 设定合适的大小
-		menuItemRename.setToolTipText("重命名选定的文件或目录");
-
-		JMenuItem menuItemDelete = new JMenuItem("删除");
-		menuItemDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 16)); // 设定合适的大小
-		menuItemDelete.setToolTipText("删除选定的文件或目录");
-
-		JMenuItem menuItemUploadDownload = new JMenuItem("上传/下载");
-		menuItemUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 16)); // 设定合适的大小
-		menuItemUploadDownload.setToolTipText("上传或下载文件");
-
-		// 为菜单项添加动作监听器
-		menuItemRename.addActionListener(e -> {});
-		menuItemRename.addActionListener(e -> {});
-		menuItemDelete.addActionListener(e -> {});
-
-		// 将菜单项添加到弹出菜单
-		popupMenu.add(menuItemRename);
-		popupMenu.add(menuItemDelete);
-		popupMenu.add(menuItemUploadDownload);
-
-		return popupMenu;
+	public void setPeer(FileExplorerComponent peer) {
+		this.peer = peer;
 	}
 
 	private void updateButtonStates() {
@@ -299,6 +350,10 @@ public class FileExplorerComponent extends JPanel {
 		btnDelete.setEnabled(isRowSelected);
 	}
 
+	public void setFtpClient(FtpClient client) {
+		this.ftpClient = client;
+	}
+
 	public void setFileSystemProvider(FileSystemProvider fsp) {
 		this.fileSystemProvider = fsp;
 	}
@@ -306,6 +361,4 @@ public class FileExplorerComponent extends JPanel {
 	public String getCurrentPath() {
 		return currentPath;
 	}
-
-
 }

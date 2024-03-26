@@ -350,6 +350,21 @@ public class FtpCommands {
 		return sendCommand(MACHINE_LIST_DICTIONARY);
 	}
 
+	/**
+	 * 存储
+	 *
+	 * <p>此命令使服务器-DTP接受通过数据连接传输的数据，并将数据作为文件存储在服务器站点。
+	 * 如果路径名中指定的文件在服务器站点存在，则其内容将被传输的数据替换。如果路径名中指定的文件不存在，则将在服务器站点创建新文件。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response store(String pathname) throws IOException {
+		return sendCommand(STORE, pathname);
+	}
+
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);

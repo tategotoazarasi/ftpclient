@@ -48,7 +48,11 @@ public class DataServer implements Runnable {
 		}
 	}
 
-	public void waitHandlerComplete() throws InterruptedException {
-		connectionHandler.waitForCompletion();
+	public void waitHandlerComplete() {
+		try {
+			connectionHandler.waitForCompletion();
+		} catch (InterruptedException e) {
+			logger.error("DataServer stopped: {}", e.getMessage());
+		}
 	}
 }

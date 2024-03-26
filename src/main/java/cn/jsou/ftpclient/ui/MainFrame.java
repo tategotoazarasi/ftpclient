@@ -61,8 +61,11 @@ public class MainFrame extends JFrame {
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 		// 初始化本地和服务器的FileExplorerComponent实例
-		localFileExplorer = new FileExplorerComponent(new NativeFileSystemProvider(), System.getProperty("user.home"));
-		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/");
+		localFileExplorer  =
+				new FileExplorerComponent(new NativeFileSystemProvider(), System.getProperty("user.home"), false, this);
+		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/", true, this);
+		localFileExplorer.setPeer(serverFileExplorer);
+		serverFileExplorer.setPeer(localFileExplorer);
 
 		splitPane.setLeftComponent(localFileExplorer);
 		splitPane.setRightComponent(serverFileExplorer);
@@ -86,16 +89,18 @@ public class MainFrame extends JFrame {
 			if (loginSuccess) {
 				JOptionPane.showMessageDialog(this, "登录成功！", "登录", JOptionPane.INFORMATION_MESSAGE);
 				// 登录成功后的操作，例如更新界面显示服务器文件列表
+				ftpClient.init();
+				ftpClient.dataServer.waitHandlerComplete();
+				serverFileExplorer.setFileSystemProvider(ftpClient.remoteFs);
+				serverFileExplorer.updateFileList(ftpClient.remoteFs.getCurrentDirectoryPath());
+				localFileExplorer.setFtpClient(ftpClient);
+				serverFileExplorer.setFtpClient(ftpClient);
 			} else {
 				JOptionPane.showMessageDialog(this,
 				                              "登录失败：用户名或密码错误。",
 				                              "登录失败",
 				                              JOptionPane.ERROR_MESSAGE);
 			}
-			ftpClient.init();
-			ftpClient.dataServer.waitHandlerComplete();
-			serverFileExplorer.setFileSystemProvider(ftpClient.remoteFs);
-			serverFileExplorer.updateFileList(ftpClient.remoteFs.getCurrentDirectoryPath());
 		} catch (Exception ex) {
 			logger.error("错误：{}", ex.getMessage());
 			JOptionPane.showMessageDialog(this, "错误：" + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
