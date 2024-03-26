@@ -13,6 +13,12 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class FileExplorerComponent extends JPanel {
+	JButton btnGoUp           = new JButton();
+	JButton btnNewFolder      = new JButton();
+	JButton btnRename         = new JButton();
+	JButton btnDelete         = new JButton();
+	JButton btnUploadDownload = new JButton();
+	JButton btnRefresh        = new JButton();
 	private FileSystemProvider fileSystemProvider;
 	private JTable             fileTable;
 	private String             currentPath;
@@ -30,34 +36,23 @@ public class FileExplorerComponent extends JPanel {
 		// 创建按钮并添加到工具栏
 		JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-		JButton btnGoUp = new JButton();
 		btnGoUp.setIcon(SvgIconLoader.loadSvgIcon("/up-icon.svg", 24));
 		btnGoUp.setToolTipText("上一级");
-
-		JButton btnNewFolder = new JButton();
 		btnNewFolder.setIcon(SvgIconLoader.loadSvgIcon("/new-folder-icon.svg", 24));
 		btnNewFolder.setToolTipText("新建目录");
-
-		JButton btnRename = new JButton();
 		btnRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 24));
 		btnRename.setToolTipText("重命名");
-
-		JButton btnDelete = new JButton();
 		btnDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 24));
 		btnDelete.setToolTipText("删除");
-
-		JButton btnUploadDownload = new JButton();
 		btnUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 24));
 		btnUploadDownload.setToolTipText("上传/下载");
-
-		JButton btnRefresh = new JButton();
 		btnRefresh.setIcon(SvgIconLoader.loadSvgIcon("/refresh-icon.svg", 24));
 		btnRefresh.setToolTipText("刷新");
 
 		// 添加按钮到工具栏
 		toolBar.add(btnGoUp);
 		toolBar.add(btnNewFolder);
-		toolBar.add(btnRename);
+		//toolBar.add(btnRename);
 		toolBar.add(btnDelete);
 		toolBar.add(btnUploadDownload);
 		toolBar.add(btnRefresh);
@@ -107,6 +102,15 @@ public class FileExplorerComponent extends JPanel {
 				}
 			}
 		});
+
+		fileTable.getSelectionModel().addListSelectionListener(e -> {
+			// 当表格的选择状态改变时，更新按钮的启用/禁用状态
+			if (!e.getValueIsAdjusting()) {
+				updateButtonStates();
+			}
+		});
+
+		updateButtonStates();
 	}
 
 	public void updateFileList(String path) {
@@ -206,6 +210,16 @@ public class FileExplorerComponent extends JPanel {
 		return popupMenu;
 	}
 
+	private void updateButtonStates() {
+		// 检查表格中是否有选中的行
+		boolean isRowSelected = fileTable.getSelectedRow() != -1;
+
+		// 根据是否有行被选中来启用或禁用按钮
+		btnUploadDownload.setEnabled(isRowSelected);
+		btnDelete.setEnabled(isRowSelected);
+		btnRename.setEnabled(isRowSelected);
+	}
+
 	public void setFileSystemProvider(FileSystemProvider fsp) {
 		this.fileSystemProvider = fsp;
 	}
@@ -213,5 +227,6 @@ public class FileExplorerComponent extends JPanel {
 	public String getCurrentPath() {
 		return currentPath;
 	}
+
 
 }
