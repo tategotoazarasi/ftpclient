@@ -12,6 +12,8 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,7 +59,20 @@ public class FileExplorerComponent extends JPanel {
 		toolBar.add(btnRefresh);
 
 		// 添加动作监听器 - 暂时为空，等待实现
-		btnGoUp.addActionListener(e -> {});
+		btnGoUp.addActionListener(e -> {
+			if (currentPath != null && !currentPath.isEmpty()) {
+				// 使用Path类处理路径
+				Path currentDirectory = Paths.get(currentPath);
+				Path parentDirectory  = currentDirectory.getParent(); // 获取父目录
+
+				if (parentDirectory != null) {
+					// 更新当前路径
+					currentPath = parentDirectory.toString();
+					// 刷新文件列表以显示父目录的内容
+					updateFileList(currentPath);
+				}
+			}
+		});
 		btnNewFolder.addActionListener(e -> {});
 		btnDelete.addActionListener(e -> {});
 		btnUploadDownload.addActionListener(e -> {});
@@ -115,51 +130,6 @@ public class FileExplorerComponent extends JPanel {
 		updateButtonStates();
 	}
 
-	private void addTableMouseListener() {
-		fileTable.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) { // 双击事件
-					int viewRow = fileTable.rowAtPoint(e.getPoint());
-					if (viewRow >= 0) {
-						int    modelRow = fileTable.convertRowIndexToModel(viewRow); // 转换为模型中的索引
-						String name     = (String) fileTable.getModel().getValueAt(modelRow, 0); // 使用模型索引获取数据
-						String newPath  = currentPath + (currentPath.endsWith("/") ? "" : '/') + name;
-						if (fileSystemProvider.isDirectory(newPath)) {
-							updateFileList(newPath);
-						}
-					}
-				}
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-				showPopupMenu(e);
-			}
-
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				showPopupMenu(e);
-			}
-
-			private void showPopupMenu(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					// 在弹出菜单之前，确保点击的行被选中
-					int rowAtPoint = fileTable.rowAtPoint(e.getPoint());
-					if (rowAtPoint > -1 && rowAtPoint < fileTable.getRowCount()) {
-						fileTable.setRowSelectionInterval(rowAtPoint, rowAtPoint);
-					} else {
-						fileTable.clearSelection();
-					}
-
-					// 获取弹出菜单并显示
-					JPopupMenu popupMenu = createTablePopupMenu();
-					popupMenu.show(e.getComponent(), e.getX(), e.getY());
-				}
-			}
-		});
-	}
-
 	public void updateFileList(String path) {
 		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
 		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
@@ -206,6 +176,51 @@ public class FileExplorerComponent extends JPanel {
 		});
 
 		this.repaint();
+	}
+
+	private void addTableMouseListener() {
+		fileTable.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) { // 双击事件
+					int viewRow = fileTable.rowAtPoint(e.getPoint());
+					if (viewRow >= 0) {
+						int    modelRow = fileTable.convertRowIndexToModel(viewRow); // 转换为模型中的索引
+						String name     = (String) fileTable.getModel().getValueAt(modelRow, 0); // 使用模型索引获取数据
+						String newPath  = currentPath + (currentPath.endsWith("/") ? "" : '/') + name;
+						if (fileSystemProvider.isDirectory(newPath)) {
+							updateFileList(newPath);
+						}
+					}
+				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				showPopupMenu(e);
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				showPopupMenu(e);
+			}
+
+			private void showPopupMenu(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					// 在弹出菜单之前，确保点击的行被选中
+					int rowAtPoint = fileTable.rowAtPoint(e.getPoint());
+					if (rowAtPoint > -1 && rowAtPoint < fileTable.getRowCount()) {
+						fileTable.setRowSelectionInterval(rowAtPoint, rowAtPoint);
+					} else {
+						fileTable.clearSelection();
+					}
+
+					// 获取弹出菜单并显示
+					JPopupMenu popupMenu = createTablePopupMenu();
+					popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		});
 	}
 
 	private JPopupMenu createTablePopupMenu() {
