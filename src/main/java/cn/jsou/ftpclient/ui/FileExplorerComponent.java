@@ -7,9 +7,12 @@ import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Collections;
 import java.util.List;
 
 public class FileExplorerComponent extends JPanel {
@@ -112,42 +115,18 @@ public class FileExplorerComponent extends JPanel {
 		updateButtonStates();
 	}
 
-	public void updateFileList(String path) {
-		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
-		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
-
-		java.util.List<String> directories = fileSystemProvider.getDirectories(path);
-		directories.forEach(dir -> model.addRow(new Object[]{dir, "", "", ""}));
-
-		List<File> files = fileSystemProvider.getFiles(path);
-		files.forEach(file -> model.addRow(new Object[]{
-				file.getName(),
-				FileUtils.byteCountToDisplaySize(file.getSize()),
-				TimeUtils.formatRelativeTime(file.getCreatedTime()),
-				TimeUtils.formatRelativeTime(file.getModifiedTime())
-		}));
-
-		fileTable.setModel(model);
-		currentPath = path;
-
-		fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileCellRenderer());
-		this.repaint();
-	}
-
 	private void addTableMouseListener() {
 		fileTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) { // 双击事件
-					int row = fileTable.rowAtPoint(e.getPoint());
-					if (row >= 0) {
-						String name = (String) fileTable.getModel().getValueAt(row, 0); // 获取双击的行的“Name”列的值
-						String
-								newPath =
-								currentPath + (currentPath.endsWith("/") ? "" : '/') + name; // 假设为简单路径拼接，根据您的实际情况调整
-						// 判断是否为目录
+					int viewRow = fileTable.rowAtPoint(e.getPoint());
+					if (viewRow >= 0) {
+						int    modelRow = fileTable.convertRowIndexToModel(viewRow); // 转换为模型中的索引
+						String name     = (String) fileTable.getModel().getValueAt(modelRow, 0); // 使用模型索引获取数据
+						String newPath  = currentPath + (currentPath.endsWith("/") ? "" : '/') + name;
 						if (fileSystemProvider.isDirectory(newPath)) {
-							updateFileList(newPath); // 更新文件列表为新的目录路径
+							updateFileList(newPath);
 						}
 					}
 				}
@@ -179,6 +158,54 @@ public class FileExplorerComponent extends JPanel {
 				}
 			}
 		});
+	}
+
+	public void updateFileList(String path) {
+		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
+		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
+
+		java.util.List<String> directories = fileSystemProvider.getDirectories(path);
+		directories.forEach(dir -> model.addRow(new Object[]{dir, "", "", ""}));
+
+		List<File> files = fileSystemProvider.getFiles(path);
+		files.forEach(file -> model.addRow(new Object[]{
+				file.getName(),
+				FileUtils.byteCountToDisplaySize(file.getSize()),
+				TimeUtils.formatRelativeTime(file.getCreatedTime()),
+				TimeUtils.formatRelativeTime(file.getModifiedTime())
+		}));
+
+		fileTable.setModel(model);
+		currentPath = path;
+
+		fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileCellRenderer());
+
+		// 创建行排序器并为表格设置行排序器
+		TableRowSorter<TableModel> sorter = new TableRowSorter<>(fileTable.getModel());
+		fileTable.setRowSorter(sorter);
+		fileTable.getTableHeader().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int col = fileTable.columnAtPoint(e.getPoint());
+				if (col >= 0) {
+					// 检查当前列的排序状态
+					List<? extends RowSorter.SortKey> sortKeys = sorter.getSortKeys();
+					if (!sortKeys.isEmpty() && sortKeys.get(0).getColumn() == col) {
+						// 如果当前列已经是主排序键，反转排序顺序
+						boolean ascending = sortKeys.get(0).getSortOrder() == SortOrder.ASCENDING;
+						sorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(col,
+						                                                                   ascending ?
+						                                                                   SortOrder.DESCENDING :
+						                                                                   SortOrder.ASCENDING)));
+					} else {
+						// 否则，设置为升序排序
+						sorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(col, SortOrder.ASCENDING)));
+					}
+				}
+			}
+		});
+
+		this.repaint();
 	}
 
 	private JPopupMenu createTablePopupMenu() {
