@@ -61,7 +61,7 @@ public class MainFrame extends JFrame {
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 		// 初始化本地和服务器的FileExplorerComponent实例
-		localFileExplorer  = new FileExplorerComponent(new NativeFileSystemProvider(), "/");
+		localFileExplorer = new FileExplorerComponent(new NativeFileSystemProvider(), System.getProperty("user.home"));
 		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/");
 
 		splitPane.setLeftComponent(localFileExplorer);
