@@ -153,4 +153,22 @@ public class VirtualFileSystem implements FileSystemProvider {
 			logger.error("Failed to refresh the directory", e);
 		}
 	}
+
+	@Override
+	public void mkDir(String path) {
+		if (!isDirectory(path)) {
+			String[]  pathComponents = path.split("/");
+			Directory currentDir     = root;
+
+			for (int i = 1; i < pathComponents.length; i++) {
+				String component = pathComponents[i];
+				if (!component.isEmpty()) {
+					if (!currentDir.directories.containsKey(component)) {
+						currentDir.createDirectory(component);
+					}
+					currentDir = currentDir.directories.get(component);
+				}
+			}
+		}
+	}
 }

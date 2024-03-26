@@ -73,7 +73,46 @@ public class FileExplorerComponent extends JPanel {
 				}
 			}
 		});
-		btnNewFolder.addActionListener(e -> {});
+		btnNewFolder.addActionListener(e -> {
+			// 弹出输入对话框要求用户输入新目录的名称
+			String
+					newFolderName =
+					JOptionPane.showInputDialog(this, "输入新目录的名称:", "新建目录", JOptionPane.PLAIN_MESSAGE);
+
+			if (newFolderName != null && !newFolderName.trim().isEmpty()) {
+				// 检查名称合法性（这里简单检查，根据实际需求调整）
+				if (newFolderName.contains("/") || newFolderName.contains("\\")) {
+					JOptionPane.showMessageDialog(this, "目录名称不能包含 / 或 \\。", "错误", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				// 构建新目录的完整路径
+				Path newPath = Paths.get(currentPath, newFolderName);
+
+				// 检查目录是否已存在
+				if (fileSystemProvider.isDirectory(newPath.toString())) {
+					JOptionPane.showMessageDialog(this, "目录已存在。", "错误", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				try {
+					// 尝试创建新目录
+					fileSystemProvider.mkDir(newPath.toString());
+					// 刷新当前目录的视图
+					updateFileList(currentPath);
+				} catch (Exception ex) {
+					// 处理创建目录过程中可能出现的异常
+					JOptionPane.showMessageDialog(this,
+					                              "创建目录失败: " + ex.getMessage(),
+					                              "错误",
+					                              JOptionPane.ERROR_MESSAGE);
+				}
+			} else if (newFolderName != null) {
+				// 用户输入为空，但不是点击取消，给出提示
+				JOptionPane.showMessageDialog(this, "目录名称不能为空。", "警告", JOptionPane.WARNING_MESSAGE);
+			}
+			// 如果用户点击取消，newFolderName将为null，这里不做处理即可
+		});
 		btnDelete.addActionListener(e -> {});
 		btnUploadDownload.addActionListener(e -> {});
 		btnRefresh.addActionListener(e -> {

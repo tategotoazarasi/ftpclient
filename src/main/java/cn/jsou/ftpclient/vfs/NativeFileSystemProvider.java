@@ -62,4 +62,15 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 	@Override public void refresh() {
 		// do nothing
 	}
+
+	@Override
+	public void mkDir(String path) {
+		File directory = new File(path);
+		if (!directory.exists()) {
+			boolean created = directory.mkdirs();
+			if (!created) {
+				logger.error("Failed to create directory: {}", path);
+			}
+		}
+	}
 }

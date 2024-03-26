@@ -10,4 +10,6 @@ public interface FileSystemProvider {
 	boolean isDirectory(String path); // 判断路径是否为目录
 
 	void refresh();
+
+	void mkDir(String path);
 }
