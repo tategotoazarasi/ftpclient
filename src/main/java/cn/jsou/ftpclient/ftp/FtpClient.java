@@ -2,6 +2,7 @@ package cn.jsou.ftpclient.ftp;
 
 import cn.jsou.ftpclient.ftp.handlers.ConnectionHandler;
 import cn.jsou.ftpclient.ftp.handlers.MLSDHandler;
+import cn.jsou.ftpclient.ftp.handlers.RETRHandler;
 import cn.jsou.ftpclient.ftp.handlers.STORHandler;
 import cn.jsou.ftpclient.vfs.VirtualFileSystem;
 import org.apache.commons.io.IOUtils;
@@ -155,6 +156,28 @@ public class FtpClient {
 			return false;
 		}
 		return true;
+	}
+
+	public boolean downloadFile(String filename, java.io.File file) {
+		try {
+			Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
+			if (!portResp.isSuccess()) {
+				logger.error("Failed to set data port with reply code: {}", portResp.getReplyCode());
+				return false;
+			}
+			ConnectionHandler ch = new RETRHandler(file);
+			dataServer.setConnectionHandler(ch);
+			Response retrResp = ftpCommands.retrieve(filename);
+			if (!retrResp.isSuccess()) {
+				logger.error("Failed to retrieve file with reply code: {}", retrResp.getReplyCode());
+				return false;
+			}
+		} catch (IOException e) {
+			logger.error("Failed to download file", e);
+			return false;
+		}
+		return true;
+
 	}
 
 	public void close() throws InterruptedException {

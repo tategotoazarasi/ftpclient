@@ -365,6 +365,20 @@ public class FtpCommands {
 		return sendCommand(STORE, pathname);
 	}
 
+	/**
+	 * 检索
+	 *
+	 * <p>此命令使服务器-DTP将指定路径名中的文件副本传输到数据连接另一端的服务器或用户-DTP。服务器站点上的文件的状态和内容不受影响。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response retrieve(String filename) throws IOException {
+		return sendCommand(RETRIEVE, filename);
+	}
+
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);
