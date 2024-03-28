@@ -1,7 +1,7 @@
 package cn.jsou.ftpclient.ui;
 
 import cn.jsou.ftpclient.ftp.FtpClient;
-import cn.jsou.ftpclient.utils.TimeUtils;
+import cn.jsou.ftpclient.utils.TimeUtil;
 import cn.jsou.ftpclient.vfs.File;
 import cn.jsou.ftpclient.vfs.FileSystemProvider;
 import org.apache.commons.io.FileUtils;
@@ -118,7 +118,11 @@ public class FileExplorerComponent extends JPanel {
 			}
 			// 如果用户点击取消，newFolderName将为null，这里不做处理即可
 		});
-		btnDelete.addActionListener(e -> {});
+		btnDelete.addActionListener(e -> {
+			int[] selectedRows = fileTable.getSelectedRows();
+			// 直接传递选中的行到公共方法中
+			deleteSelectedItems(selectedRows);
+		});
 		btnUploadDownload.addActionListener(e -> {
 			uploadDownloadSelectedFiles();
 			peer.refresh();
@@ -189,8 +193,8 @@ public class FileExplorerComponent extends JPanel {
 		files.forEach(file -> model.addRow(new Object[]{
 				file.getName(),
 				FileUtils.byteCountToDisplaySize(file.getSize()),
-				TimeUtils.formatRelativeTime(file.getCreatedTime()),
-				TimeUtils.formatRelativeTime(file.getModifiedTime())
+				TimeUtil.formatRelativeTime(file.getCreatedTime()),
+				TimeUtil.formatRelativeTime(file.getModifiedTime())
 		}));
 
 		fileTable.setModel(model);
@@ -371,6 +375,31 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	private void deleteSelectedItems(int[] selectedRows) {
+		if (selectedRows.length == 0) {
+			JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		// 根据选中的行数显示不同的确认消息
+		String
+				message =
+				selectedRows.length == 1 ?
+				"确定要删除选中的项吗？" :
+				"确定要删除选中的 " + selectedRows.length + " 项吗？";
+
+		int confirmation = JOptionPane.showConfirmDialog(this, message, "确认删除", JOptionPane.YES_NO_OPTION);
+		if (confirmation == JOptionPane.YES_OPTION) {
+			for (int viewRowIndex : selectedRows) {
+				int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
+				String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+				String filePath      = Paths.get(currentPath, fileName).toString();
+				fileSystemProvider.delete(filePath);
+			}
+			refresh();
+		}
+	}
+
 	private JPopupMenu createTablePopupMenu() {
 		JPopupMenu popupMenu = new JPopupMenu();
 
@@ -405,7 +434,15 @@ public class FileExplorerComponent extends JPanel {
 			}
 		});
 
-		menuItemDelete.addActionListener(e -> {});
+		menuItemDelete.addActionListener(e -> {
+			int selectedRow = fileTable.getSelectedRow();
+			if (selectedRow != -1) {
+				// 对于 menuItemDelete，总是只有一行被选中
+				deleteSelectedItems(new int[]{selectedRow});
+			} else {
+				JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
+			}
+		});
 		menuItemUploadDownload.addActionListener(e -> {
 			uploadDownloadSelectedFiles();
 			peer.refresh();

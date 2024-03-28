@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
-public class TimeUtils {
+public class TimeUtil {
 	private static final PrettyTime p = new PrettyTime(new Locale("zh_CN"));
 
 	public static String formatRelativeTime(LocalDateTime dateTime) {

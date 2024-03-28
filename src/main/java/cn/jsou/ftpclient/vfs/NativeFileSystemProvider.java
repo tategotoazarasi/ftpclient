@@ -106,4 +106,14 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 			logger.info("Successfully renamed {} to {}", oldPathname, newFilename);
 		}
 	}
+
+	@Override public void delete(String filepath) {
+		java.io.File file = new java.io.File(filepath);
+		if (file.exists()) {
+			boolean deleted = file.delete();
+			if (!deleted) {
+				logger.error("Failed to delete file or directory: {}", filepath);
+			}
+		}
+	}
 }

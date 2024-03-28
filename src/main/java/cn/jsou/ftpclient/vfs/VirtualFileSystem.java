@@ -176,4 +176,8 @@ public class VirtualFileSystem implements FileSystemProvider {
 	@Override public void rename(String oldPathname, String newFilename) {
 		ftpClient.rename(oldPathname, newFilename);
 	}
+
+	@Override public void delete(String filepath) {
+		ftpClient.delete(filepath);
+	}
 }

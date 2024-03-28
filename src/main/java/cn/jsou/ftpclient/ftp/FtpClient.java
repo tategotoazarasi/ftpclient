@@ -194,6 +194,17 @@ public class FtpClient {
 		}
 	}
 
+	public void delete(String pathname) {
+		try {
+			Response deleteResp = ftpCommands.delete(pathname);
+			if (!deleteResp.isSuccess()) {
+				logger.error("Failed to delete file with reply code: {}", deleteResp.getReplyCode());
+			}
+		} catch (IOException e) {
+			logger.error("Failed to delete file", e);
+		}
+	}
+
 	public void close() throws InterruptedException {
 		ftpCommands.close();
 		IOUtils.closeQuietly(serverSocket);

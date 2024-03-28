@@ -14,4 +14,6 @@ public interface FileSystemProvider {
 	void mkDir(String path);
 
 	void rename(String oldPathname, String newFilename);
+
+	void delete(String filepath);
 }

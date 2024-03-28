@@ -407,6 +407,21 @@ public class FtpCommands {
 		return sendCommand(RENAME_TO, filename);
 	}
 
+	/**
+	 * 删除
+	 *
+	 * <p>此命令导致在路径名中指定的文件在服务器站点被删除。
+	 * 如果需要额外的保护级别（如查询，“您真的希望删除吗？”），则应由用户-FTP进程提供。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response delete(String filepath) throws IOException {
+		return sendCommand(DELETE, filepath);
+	}
+
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);
