@@ -25,12 +25,13 @@ public class FileExplorerComponent extends JPanel {
 	JButton btnDelete         = new JButton();
 	JButton btnUploadDownload = new JButton();
 	JButton btnRefresh        = new JButton();
-	private boolean               isRemote = false;
+	private final JLabel                currentPathLabel = new JLabel(" ");
 	private FileSystemProvider    fileSystemProvider;
 	private JTable                fileTable;
 	private String                currentPath;
 	private FtpClient             ftpClient;
-	private FileExplorerComponent peer;
+	private       boolean               isRemote         = false;
+	private       FileExplorerComponent peer;
 
 	public FileExplorerComponent(FileSystemProvider fileSystemProvider,
 	                             String initialPath,
@@ -46,6 +47,10 @@ public class FileExplorerComponent extends JPanel {
 
 	private void initUI() {
 		setLayout(new BorderLayout());
+
+		// 创建北部面板，包括工具栏和路径标签
+		JPanel northPanel = new JPanel();
+		northPanel.setLayout(new BorderLayout());
 
 		// 创建按钮并添加到工具栏
 		JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -129,8 +134,18 @@ public class FileExplorerComponent extends JPanel {
 		});
 		btnRefresh.addActionListener(e -> refresh());
 
-		// 将工具栏添加到主面板的顶部
-		add(toolBar, BorderLayout.NORTH);
+		// 将工具栏添加到北部面板的北部
+		northPanel.add(toolBar, BorderLayout.NORTH);
+
+		// 创建显示当前路径的面板
+		JPanel pathPanel = new JPanel(new BorderLayout());
+		pathPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // 添加一些边距
+		currentPathLabel.setText(currentPath); // 初始时设置为当前路径
+		pathPanel.add(currentPathLabel, BorderLayout.CENTER);
+		// 将路径面板添加到北部面板的中部
+		northPanel.add(pathPanel, BorderLayout.SOUTH);
+		// 将北部面板添加到主面板的北部
+		add(northPanel, BorderLayout.NORTH);
 
 		fileTable = new JTable() {
 			@Override
@@ -199,6 +214,8 @@ public class FileExplorerComponent extends JPanel {
 
 		fileTable.setModel(model);
 		currentPath = path;
+		// 在文件列表更新后，设置标签以显示新的当前路径
+		currentPathLabel.setText(path);
 
 		fileTable.getColumnModel().getColumn(0).setCellRenderer(new FileCellRenderer());
 
