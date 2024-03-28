@@ -20,16 +20,16 @@ import java.util.List;
 
 public class FileExplorerComponent extends JPanel {
 	private final MainFrame mainFrame;
+	private final JLabel currentPathLabel = new JLabel(" ");
 	JButton btnGoUp           = new JButton();
 	JButton btnNewFolder      = new JButton();
 	JButton btnDelete         = new JButton();
 	JButton btnUploadDownload = new JButton();
 	JButton btnRefresh        = new JButton();
-	private final JLabel                currentPathLabel = new JLabel(" ");
-	private FileSystemProvider    fileSystemProvider;
-	private JTable                fileTable;
-	private String                currentPath;
-	private FtpClient             ftpClient;
+	private FileSystemProvider fileSystemProvider;
+	private JTable             fileTable;
+	private String             currentPath;
+	private FtpClient          ftpClient;
 	private       boolean               isRemote         = false;
 	private       FileExplorerComponent peer;
 

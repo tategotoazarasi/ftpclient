@@ -225,10 +225,22 @@ public class FtpClient {
 		}
 	}
 
-	public void close() throws InterruptedException {
-		ftpCommands.close();
-		IOUtils.closeQuietly(serverSocket);
-		dataServer.close();
-		serverThread.join();
+	public void logout() {
+		try {
+			ftpCommands.logout();
+		} catch (IOException e) {
+			logger.error("Failed to logout", e);
+		}
+	}
+
+	public void close() {
+		try {
+			ftpCommands.close();
+			IOUtils.closeQuietly(serverSocket);
+			dataServer.close();
+			serverThread.join();
+		} catch (InterruptedException e) {
+			logger.error("Failed to close the FTP client", e);
+		}
 	}
 }
