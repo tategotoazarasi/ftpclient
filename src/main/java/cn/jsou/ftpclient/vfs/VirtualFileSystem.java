@@ -95,8 +95,9 @@ public class VirtualFileSystem implements FileSystemProvider {
 	@Override public List<String> getDirectories(String path) {
 		if (ftpClient == null) {return Collections.emptyList();}
 		try {
-			ftpClient.machineListDictionary(path);
 			changeDirectory(path);
+			currentDirectory.clear();
+			ftpClient.machineListDictionary(path);
 			return new ArrayList<>(currentDirectory.directories.keySet());
 		} catch (IOException e) {
 			logger.error("Failed to list directories", e);
@@ -170,5 +171,9 @@ public class VirtualFileSystem implements FileSystemProvider {
 				}
 			}
 		}
+	}
+
+	@Override public void rename(String oldPathname, String newFilename) {
+		ftpClient.rename(oldPathname, newFilename);
 	}
 }

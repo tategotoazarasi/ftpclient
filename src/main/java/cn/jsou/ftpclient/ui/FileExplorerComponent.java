@@ -83,11 +83,7 @@ public class FileExplorerComponent extends JPanel {
 			}
 		});
 		btnNewFolder.addActionListener(e -> {
-			// 弹出输入对话框要求用户输入新目录的名称
-			String
-					newFolderName =
-					JOptionPane.showInputDialog(this, "输入新目录的名称:", "新建目录", JOptionPane.PLAIN_MESSAGE);
-
+			String newFolderName = promptForName("输入新目录的名称:", "新建目录");
 			if (newFolderName != null && !newFolderName.trim().isEmpty()) {
 				// 检查名称合法性（这里简单检查，根据实际需求调整）
 				if (newFolderName.contains("/") || newFolderName.contains("\\")) {
@@ -179,7 +175,6 @@ public class FileExplorerComponent extends JPanel {
 	}
 
 	public void refresh() {
-		updateFileList(currentPath);
 		updateFileList(currentPath);
 	}
 
@@ -277,36 +272,8 @@ public class FileExplorerComponent extends JPanel {
 		});
 	}
 
-	private JPopupMenu createTablePopupMenu() {
-		JPopupMenu popupMenu = new JPopupMenu();
-
-		JMenuItem menuItemRename = new JMenuItem("重命名");
-		menuItemRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 16)); // 设定合适的大小
-		menuItemRename.setToolTipText("重命名选定的文件或目录");
-
-		JMenuItem menuItemDelete = new JMenuItem("删除");
-		menuItemDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 16)); // 设定合适的大小
-		menuItemDelete.setToolTipText("删除选定的文件或目录");
-
-		JMenuItem menuItemUploadDownload = new JMenuItem("上传/下载");
-		menuItemUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 16)); // 设定合适的大小
-		menuItemUploadDownload.setToolTipText("上传或下载文件");
-
-		// 为菜单项添加动作监听器
-		menuItemRename.addActionListener(e -> {});
-		menuItemDelete.addActionListener(e -> {});
-		menuItemUploadDownload.addActionListener(e -> {
-			uploadDownloadSelectedFiles();
-			peer.refresh();
-		});
-
-
-		// 将菜单项添加到弹出菜单
-		popupMenu.add(menuItemRename);
-		popupMenu.add(menuItemDelete);
-		popupMenu.add(menuItemUploadDownload);
-
-		return popupMenu;
+	private String promptForName(String message, String title) {
+		return JOptionPane.showInputDialog(this, message, title, JOptionPane.PLAIN_MESSAGE);
 	}
 
 	public void setPeer(FileExplorerComponent peer) {
@@ -404,4 +371,52 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	private JPopupMenu createTablePopupMenu() {
+		JPopupMenu popupMenu = new JPopupMenu();
+
+		JMenuItem menuItemRename = new JMenuItem("重命名");
+		menuItemRename.setIcon(SvgIconLoader.loadSvgIcon("/rename-icon.svg", 16)); // 设定合适的大小
+		menuItemRename.setToolTipText("重命名选定的文件或目录");
+
+		JMenuItem menuItemDelete = new JMenuItem("删除");
+		menuItemDelete.setIcon(SvgIconLoader.loadSvgIcon("/delete-icon.svg", 16)); // 设定合适的大小
+		menuItemDelete.setToolTipText("删除选定的文件或目录");
+
+		JMenuItem menuItemUploadDownload = new JMenuItem("上传/下载");
+		menuItemUploadDownload.setIcon(SvgIconLoader.loadSvgIcon("/upload-download-icon.svg", 16)); // 设定合适的大小
+		menuItemUploadDownload.setToolTipText("上传或下载文件");
+
+		// 为菜单项添加动作监听器
+		menuItemRename.addActionListener(e -> {
+			int selectedRow = fileTable.getSelectedRow();
+			if (selectedRow == -1) {
+				JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			String oldFileName = (String) fileTable.getValueAt(selectedRow, 0);
+			String oldFilePath = Paths.get(currentPath, oldFileName).toString();
+
+			String newFilename = promptForName("请输入新的文件名:", "重命名");
+			if (newFilename != null && !newFilename.trim().isEmpty()) {
+				fileSystemProvider.rename(oldFilePath, newFilename);
+				refresh();
+			} else if (newFilename != null) {
+				JOptionPane.showMessageDialog(this, "文件名不能为空。", "警告", JOptionPane.WARNING_MESSAGE);
+			}
+		});
+
+		menuItemDelete.addActionListener(e -> {});
+		menuItemUploadDownload.addActionListener(e -> {
+			uploadDownloadSelectedFiles();
+			peer.refresh();
+		});
+
+
+		// 将菜单项添加到弹出菜单
+		popupMenu.add(menuItemRename);
+		popupMenu.add(menuItemDelete);
+		popupMenu.add(menuItemUploadDownload);
+
+		return popupMenu;
+	}
 }

@@ -177,7 +177,21 @@ public class FtpClient {
 			return false;
 		}
 		return true;
+	}
 
+	public void rename(String oldPathname, String newFilename) {
+		try {
+			Response renameResp = ftpCommands.renameFrom(oldPathname);
+			if (!renameResp.isSuccess()) {
+				logger.error("Failed to rename file with reply code: {}", renameResp.getReplyCode());
+			}
+			Response renameToResp = ftpCommands.renameTo(newFilename);
+			if (!renameToResp.isSuccess()) {
+				logger.error("Failed to rename file with reply code: {}", renameToResp.getReplyCode());
+			}
+		} catch (IOException e) {
+			logger.error("Failed to rename file", e);
+		}
 	}
 
 	public void close() throws InterruptedException {

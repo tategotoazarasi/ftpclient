@@ -44,4 +44,9 @@ public class Directory {
 	public Directory getParent() {
 		return parent;
 	}
+
+	public void clear() {
+		files.clear();
+		directories.clear();
+	}
 }

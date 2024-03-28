@@ -73,4 +73,37 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 			}
 		}
 	}
+
+	@Override
+	public void rename(String oldPathname, String newFilename) {
+		if (oldPathname == null || newFilename == null || newFilename.trim().isEmpty()) {
+			logger.error("Invalid parameters for rename operation: oldPathname={}, newFilename={}",
+			             oldPathname,
+			             newFilename);
+			return;
+		}
+
+		java.io.File oldFile = new java.io.File(oldPathname);
+		if (!oldFile.exists()) {
+			logger.error("The file or directory to rename does not exist: {}", oldPathname);
+			return;
+		}
+
+		// 构建新文件或目录的完整路径
+		java.io.File newFile = new java.io.File(oldFile.getParent(), newFilename);
+
+		// 检查是否存在同名文件或目录
+		if (newFile.exists()) {
+			logger.error("A file or directory with the new name already exists: {}", newFile.getPath());
+			return;
+		}
+
+		// 执行重命名操作
+		boolean success = oldFile.renameTo(newFile);
+		if (!success) {
+			logger.error("Failed to rename file or directory from {} to {}", oldPathname, newFilename);
+		} else {
+			logger.info("Successfully renamed {} to {}", oldPathname, newFilename);
+		}
+	}
 }

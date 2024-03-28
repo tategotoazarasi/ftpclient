@@ -379,6 +379,34 @@ public class FtpCommands {
 		return sendCommand(RETRIEVE, filename);
 	}
 
+	/**
+	 * 重命名从
+	 *
+	 * <p>此命令指定要重命名的文件的旧路径名。此命令必须立即由指定新文件路径名的“重命名到”命令跟随。两个命令一起导致文件被重命名。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response renameFrom(String pathname) throws IOException {
+		return sendCommand(RENAME_FROM, pathname);
+	}
+
+	/**
+	 * 重命名到
+	 *
+	 * <p>此命令指定在紧接前面的“重命名从”命令中指定的文件的新路径名。两个命令一起导致一个文件被重命名。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response renameTo(String filename) throws IOException {
+		return sendCommand(RENAME_TO, filename);
+	}
+
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);
