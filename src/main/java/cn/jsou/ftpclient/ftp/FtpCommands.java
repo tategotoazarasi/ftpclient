@@ -422,6 +422,20 @@ public class FtpCommands {
 		return sendCommand(DELETE, filepath);
 	}
 
+	/**
+	 * 创建目录
+	 *
+	 * <p>此命令导致在路径名中指定的目录被创建为一个目录（如果路径名是绝对的）或作为当前工作目录的子目录（如果路径名是相对的）。</p>
+	 *
+	 * @return 服务器的响应
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
+	 */
+	Response makeDirectory(String pathname) throws IOException {
+		return sendCommand(MAKE_DIRECTORY, pathname);
+	}
+
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);

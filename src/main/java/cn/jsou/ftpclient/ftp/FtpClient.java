@@ -205,6 +205,17 @@ public class FtpClient {
 		}
 	}
 
+	public void makeDirectory(String pathname) {
+		try {
+			Response mkdResp = ftpCommands.makeDirectory(pathname);
+			if (!mkdResp.isSuccess()) {
+				logger.error("Failed to make directory with reply code: {}", mkdResp.getReplyCode());
+			}
+		} catch (IOException e) {
+			logger.error("Failed to make directory", e);
+		}
+	}
+
 	public void close() throws InterruptedException {
 		ftpCommands.close();
 		IOUtils.closeQuietly(serverSocket);

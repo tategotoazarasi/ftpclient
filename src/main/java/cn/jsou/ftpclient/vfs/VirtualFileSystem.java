@@ -170,6 +170,7 @@ public class VirtualFileSystem implements FileSystemProvider {
 					currentDir = currentDir.directories.get(component);
 				}
 			}
+			ftpClient.makeDirectory(path);
 		}
 	}
 
