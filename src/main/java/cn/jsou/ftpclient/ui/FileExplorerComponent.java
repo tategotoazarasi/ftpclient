@@ -123,7 +123,10 @@ public class FileExplorerComponent extends JPanel {
 			// 如果用户点击取消，newFolderName将为null，这里不做处理即可
 		});
 		btnDelete.addActionListener(e -> {});
-		btnUploadDownload.addActionListener(e -> {});
+		btnUploadDownload.addActionListener(e -> {
+			uploadDownloadSelectedFiles();
+			peer.refresh();
+		});
 		btnRefresh.addActionListener(e -> refresh());
 
 		// 将工具栏添加到主面板的顶部
@@ -293,77 +296,8 @@ public class FileExplorerComponent extends JPanel {
 		menuItemRename.addActionListener(e -> {});
 		menuItemDelete.addActionListener(e -> {});
 		menuItemUploadDownload.addActionListener(e -> {
-			if (ftpClient == null) {
-				JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			int selectedRow = fileTable.getSelectedRow();
-			if (!isRemote) {
-				// 获取选中的文件名
-				if (selectedRow != -1) {
-					String fileName = (String) fileTable.getValueAt(selectedRow, 0);
-					Path   filePath = Paths.get(currentPath, fileName);
-
-					// 检查文件是否存在
-					java.io.File fileToUpload = filePath.toFile();
-					if (fileToUpload.exists() && fileToUpload.isFile()) {
-						// 在这里执行上传操作，假设有一个ftpClient对象可用
-						boolean success = ftpClient.uploadFile(fileToUpload);
-						if (success) {
-							ftpClient.dataServer.waitHandlerComplete();
-							peer.refresh();
-							JOptionPane.showMessageDialog(this,
-							                              "文件上传成功",
-							                              "成功",
-							                              JOptionPane.INFORMATION_MESSAGE);
-						} else {
-							JOptionPane.showMessageDialog(this, "文件上传失败", "错误", JOptionPane.ERROR_MESSAGE);
-						}
-					} else {
-						JOptionPane.showMessageDialog(this, "选中的文件不存在", "错误", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			} else {
-				// 获取选中的文件名
-				if (selectedRow != -1) {
-					// 获取选中的文件名
-					if (selectedRow != -1) {
-						String fileName = (String) fileTable.getValueAt(selectedRow, 0);
-
-						// 目标下载路径，这里假设peer代表的是本地文件系统
-						java.io.File localFile = peer.getCurrentPath() != null ?
-						                         Paths.get(peer.getCurrentPath(), fileName).toFile() :
-						                         new java.io.File(fileName);
-
-						if (localFile.exists()) {
-							// 如果文件已存在，询问用户是否覆盖
-							int result = JOptionPane.showConfirmDialog(this,
-							                                           "文件已存在。是否覆盖？", "文件存在",
-							                                           JOptionPane.YES_NO_OPTION,
-							                                           JOptionPane.QUESTION_MESSAGE);
-
-							if (result == JOptionPane.NO_OPTION) {
-								// 如果用户选择不覆盖，取消操作
-								return;
-							}
-							// 否则继续执行下载操作
-						}
-
-						// 在这里执行下载操作，假设有一个ftpClient对象可用
-						boolean success = ftpClient.downloadFile(fileName, localFile);
-						if (success) {
-							ftpClient.dataServer.waitHandlerComplete();
-							peer.refresh();
-							JOptionPane.showMessageDialog(this,
-							                              "文件下载成功",
-							                              "成功",
-							                              JOptionPane.INFORMATION_MESSAGE);
-						} else {
-							JOptionPane.showMessageDialog(this, "文件下载失败", "错误", JOptionPane.ERROR_MESSAGE);
-						}
-					}
-				}
-			}
+			uploadDownloadSelectedFiles();
+			peer.refresh();
 		});
 
 
@@ -399,4 +333,75 @@ public class FileExplorerComponent extends JPanel {
 	public String getCurrentPath() {
 		return currentPath;
 	}
+
+	private void uploadDownloadSelectedFiles() {
+		if (ftpClient == null) {
+			JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		int[] selectedRows = fileTable.getSelectedRows();
+		for (int viewRowIndex : selectedRows) {
+			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
+			String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+
+			// 进行上传或下载操作
+			if (!isRemote) {
+				uploadFile(fileName);
+			} else {
+				downloadFile(fileName);
+			}
+		}
+	}
+
+	private void uploadFile(String fileName) {
+		Path         filePath     = Paths.get(currentPath, fileName);
+		java.io.File fileToUpload = filePath.toFile();
+
+		// 检查远程是否存在同名文件，如果存在，询问是否覆盖
+		/*if (ftpClient.checkFileExists(fileName) && !userConfirmsOverwrite(fileName)) {
+			return;
+		}*/
+
+		// 执行上传操作
+		if (!fileToUpload.isDirectory() && fileToUpload.exists() && fileToUpload.isFile()) {
+			boolean success = ftpClient.uploadFile(fileToUpload);
+			showTransferResult(success, "上传", fileName);
+		}
+	}
+
+	private void downloadFile(String fileName) {
+		java.io.File localFile = new java.io.File(peer.getCurrentPath(), fileName);
+
+		// 检查本地是否存在同名文件，如果存在，询问是否覆盖
+		if (localFile.exists() && !userConfirmsOverwrite(fileName)) {
+			return;
+		}
+
+		// 执行下载操作
+		boolean success = ftpClient.downloadFile(fileName, localFile);
+		showTransferResult(success, "下载", fileName);
+	}
+
+	private boolean userConfirmsOverwrite(String fileName) {
+		int result = JOptionPane.showConfirmDialog(this,
+		                                           "目标位置已存在文件: " + fileName + "。是否覆盖？",
+		                                           "文件已存在", JOptionPane.YES_NO_OPTION,
+		                                           JOptionPane.QUESTION_MESSAGE);
+		return result == JOptionPane.YES_OPTION;
+	}
+
+	private void showTransferResult(boolean success, String action, String fileName) {
+		if (success) {
+			JOptionPane.showMessageDialog(this,
+			                              fileName + " " + action + "成功",
+			                              "成功", JOptionPane.INFORMATION_MESSAGE);
+			refresh(); // 刷新视图
+		} else {
+			JOptionPane.showMessageDialog(this,
+			                              fileName + " " + action + "失败",
+			                              "错误", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
 }
