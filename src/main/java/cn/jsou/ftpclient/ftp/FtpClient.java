@@ -196,9 +196,18 @@ public class FtpClient {
 
 	public void delete(String pathname) {
 		try {
-			Response deleteResp = ftpCommands.delete(pathname);
-			if (!deleteResp.isSuccess()) {
-				logger.error("Failed to delete file with reply code: {}", deleteResp.getReplyCode());
+			if (remoteFs.isDirectory(pathname)) {
+				remoteFs.getDirectories(pathname).forEach(d -> delete(pathname + '/' + d));
+				remoteFs.getFiles(pathname).forEach(f -> delete(pathname + '/' + f.getName()));
+				Response rmdResp = ftpCommands.removeDirectory(pathname);
+				if (!rmdResp.isSuccess()) {
+					logger.error("Failed to remove directory with reply code: {}", rmdResp.getReplyCode());
+				}
+			} else {
+				Response deleteResp = ftpCommands.delete(pathname);
+				if (!deleteResp.isSuccess()) {
+					logger.error("Failed to delete file with reply code: {}", deleteResp.getReplyCode());
+				}
 			}
 		} catch (IOException e) {
 			logger.error("Failed to delete file", e);
