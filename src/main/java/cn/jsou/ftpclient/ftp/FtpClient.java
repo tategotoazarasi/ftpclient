@@ -212,6 +212,40 @@ public class FtpClient {
 		return true;
 	}
 
+	public boolean downloadDirectory(String dirname, java.io.File file) {
+		String current = remoteFs.getCurrentDirectoryPath();
+		try {
+			if (!file.exists()) {
+				file.mkdir();
+			}
+			Response cwdResp = ftpCommands.changeWorkingDirectory(dirname);
+			if (!cwdResp.isSuccess()) {
+				logger.error("Failed to change working directory to {} with reply code: {}",
+				             dirname,
+				             cwdResp.getReplyCode());
+				return false;
+			}
+			machineListDictionary(dirname);
+			remoteFs.changeDirectory(remoteFs.getCurrentDirectoryPath() + '/' + dirname);
+			for (var f : remoteFs.getFiles(remoteFs.getCurrentDirectoryPath())) {
+				java.io.File newFile = new java.io.File(file.getAbsolutePath() + '/' + f.getName());
+				downloadFile(f.getName(), newFile);
+				dataServer.waitHandlerComplete();
+			}
+			for (var d : remoteFs.getDirectories(remoteFs.getCurrentDirectoryPath())) {
+				java.io.File newFile = new java.io.File(file.getAbsolutePath() + '/' + d);
+				newFile.mkdir();
+				downloadDirectory(d, newFile);
+			}
+		} catch (Exception e) {
+			logger.error("Failed to download directory", e);
+		} finally {
+			remoteFs.changeDirectory(current);
+		}
+
+		return true;
+	}
+
 	public void rename(String oldPathname, String newFilename) {
 		try {
 			Response renameResp = ftpCommands.renameFrom(oldPathname);

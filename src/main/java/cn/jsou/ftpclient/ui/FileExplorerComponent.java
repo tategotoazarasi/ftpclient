@@ -331,27 +331,45 @@ public class FileExplorerComponent extends JPanel {
 		int[] selectedRows = fileTable.getSelectedRows();
 		for (int viewRowIndex : selectedRows) {
 			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
-			String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+			String itemName = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
-			// Construct the path for the file or directory to be uploaded or downloaded
-			Path filePath = Paths.get(currentPath, fileName);
+			// 构建要上传或下载的文件或目录的路径
+			Path itemPath = Paths.get(currentPath, itemName);
 
-			// Check if the selected item is a directory or a file
 			if (!isRemote) {
-				java.io.File localFile = filePath.toFile();
+				// 本地上传逻辑
+				java.io.File localFile = itemPath.toFile();
 				if (localFile.isDirectory()) {
-					// Upload the directory if isRemote is false and the selected item is a directory
+					// 如果是目录，则上传目录
 					uploadDirectory(localFile);
 				} else {
-					// Otherwise, upload the file as usual
-					uploadFile(fileName);
+					// 如果是文件，则上传文件
+					uploadFile(itemName);
 				}
 			} else {
-				// For downloading (when isRemote is true), handle as in the original method
-				downloadFile(fileName);
+				// 远程下载逻辑
+				java.io.File localDir = new java.io.File(peer.getCurrentPath());
+				if (fileSystemProvider.isDirectory(itemPath.toString())) {
+					// 如果选中的是目录，则下载目录
+					downloadDirectory(itemName, new java.io.File(localDir, itemName));
+				} else {
+					// 如果选中的是文件，则下载文件
+					downloadFile(itemName);
+				}
 			}
 		}
 	}
+
+	private void downloadDirectory(String remoteDirName, java.io.File localDir) {
+		// 假设已经处理了目录存在的情况和是否覆盖的决定
+
+		// 执行下载目录的操作
+		boolean success = ftpClient.downloadDirectory(remoteDirName, localDir);
+
+		// 显示目录下载操作的结果
+		showTransferResult(success, "下载目录", remoteDirName);
+	}
+
 
 	private void uploadDirectory(java.io.File directory) {
 		// Assume that the existence of the directory and the decision to overwrite are handled elsewhere
