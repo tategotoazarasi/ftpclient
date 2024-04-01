@@ -12,12 +12,27 @@ import java.net.Socket;
 
 import static cn.jsou.ftpclient.ftp.Command.*;
 
+/**
+ * 提供FTP命令发送的功能类
+ */
 public class FtpCommands {
-	private static final Logger logger = LogManager.getLogger(FtpCommands.class);
+	private static final Logger         logger = LogManager.getLogger(FtpCommands.class);
+	/**
+	 * 用于读取服务器响应的缓冲读取器
+	 */
+	private final        BufferedReader reader;
+	/**
+	 * 用于向服务器发送命令的打印写入器
+	 */
+	private final        PrintWriter    writer;
 
-	private final BufferedReader reader;
-	private final PrintWriter    writer;
-
+	/**
+	 * 构造一个新的FtpCommands实例，初始化与服务器的通信渠道
+	 *
+	 * @param socket 客户端与服务器间的连接套接字
+	 *
+	 * @throws IOException 如果从套接字获取输入/输出流时发生I/O错误
+	 */
 	public FtpCommands(Socket socket) throws IOException {
 		this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
@@ -39,6 +54,16 @@ public class FtpCommands {
 		return sendCommand(USER_NAME, username);
 	}
 
+	/**
+	 * 向服务器发送FTP命令并返回响应
+	 *
+	 * @param command 要发送的FTP命令
+	 * @param args    命令的参数
+	 *
+	 * @return 命令执行后服务器的响应对象
+	 *
+	 * @throws IOException 如果发生I/O错误
+	 */
 	private Response sendCommand(Command command, String... args) throws IOException {
 		String commandLine = command.getCommand() + " " + Joiner.on(" ").join(args) + "\r\n";
 		writer.print(commandLine);
@@ -47,6 +72,13 @@ public class FtpCommands {
 		return readResponse();
 	}
 
+	/**
+	 * 从服务器读取响应。
+	 *
+	 * @return 服务器响应的内容。
+	 *
+	 * @throws IOException 如果读取过程中发生I/O错误。
+	 */
 	Response readResponse() throws IOException {
 		StringBuilder responseBuilder = new StringBuilder();
 		String        responseLine;
@@ -101,25 +133,6 @@ public class FtpCommands {
 	}
 
 	/**
-	 * 账户
-	 *
-	 * <p>这个命令不一定与USER命令相关，因为有些站点可能需要登录账户，而其他站点只在特定访问时需要，如存储文件。
-	 * 在后一种情况下，命令可以在任何时候到达。对于自动化，有回复代码来区分这些情况：当登录需要账户信息时，
-	 * 成功的PASSword命令的响应是回复代码332。另一方面，如果登录不需要账户信息，成功的PASSword命令的回复是230； 如果在对话中稍后发出的命令需要账户信息，
-	 * 服务器应根据它是存储（等待接收ACCounT命令）还是丢弃命令，分别返回332或532回复。</p>
-	 *
-	 * @param accountInformation 一个Telnet字符串，用于识别用户的账户
-	 *
-	 * @return 服务器的响应
-	 *
-	 * @throws IOException 如果发生I/O错误
-	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
-	 */
-	Response account(String accountInformation) throws IOException {
-		return sendCommand(ACCOUNT, accountInformation);
-	}
-
-	/**
 	 * 打印工作目录
 	 *
 	 * <p>此命令导致在回复中返回当前工作目录的名称。</p>
@@ -131,20 +144,6 @@ public class FtpCommands {
 	 */
 	Response printWorkingDirectory() throws IOException {
 		return sendCommand(PRINT_WORKING_DIRECTORY);
-	}
-
-	/**
-	 * 更改到父目录
-	 *
-	 * <p>此命令是CWD的特例，包含在内是为了简化在具有不同父目录命名语法的操作系统之间传输目录树的程序的实现。</p>
-	 *
-	 * @return 服务器的响应。回复代码应与CWD的回复代码相同。
-	 *
-	 * @throws IOException 如果发生I/O错误
-	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
-	 */
-	Response changeToParentDirectory() throws IOException {
-		return sendCommand(CHANGE_TO_PARENT_DIRECTORY);
 	}
 
 	/**
@@ -163,23 +162,6 @@ public class FtpCommands {
 	}
 
 	/**
-	 * 结构挂载
-	 *
-	 * <p>此命令允许用户在不更改其登录或账户信息的情况下，挂载不同的文件系统数据结构。
-	 * 传输参数同样未改变。参数是指定目录或其他系统依赖的文件组指示符的路径名。</p>
-	 *
-	 * @param pathname 一个Telnet字符串，用于识别文件系统的文件组
-	 *
-	 * @return 服务器的响应
-	 *
-	 * @throws IOException 如果发生I/O错误
-	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
-	 */
-	Response structureMount(String pathname) throws IOException {
-		return sendCommand(STRUCTURE_MOUNT, pathname);
-	}
-
-	/**
 	 * 注销
 	 *
 	 * <p>此命令终止一个USER会话，如果没有进行文件传输，服务器将关闭控制连接。如果文件传输正在进行中，连接将保持开放以等待结果响应，
@@ -192,21 +174,6 @@ public class FtpCommands {
 	 */
 	Response logout() throws IOException {
 		return sendCommand(LOGOUT);
-	}
-
-	/**
-	 * 重新初始化
-	 *
-	 * <p>此命令终止一个USER会话，清除所有I/O和账户信息，但允许任何正在进行的传输完成。
-	 * 所有参数重置为默认设置，控制连接保持开放。这与用户刚刚打开控制连接后发现的状态相同。预计之后会有一个USER命令。</p>
-	 *
-	 * @return 服务器的响应
-	 *
-	 * @throws IOException 如果发生I/O错误
-	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
-	 */
-	Response reinitialize() throws IOException {
-		return sendCommand(REINITIALIZE);
 	}
 
 	/**
@@ -426,6 +393,9 @@ public class FtpCommands {
 		return sendCommand(REMOVE_DIRECTORY, pathname);
 	}
 
+	/**
+	 * 关闭与FTP服务器的通信渠道
+	 */
 	public void close() {
 		IOUtils.closeQuietly(reader);
 		IOUtils.closeQuietly(writer);
