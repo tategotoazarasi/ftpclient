@@ -1,5 +1,8 @@
 package cn.jsou.ftpclient.ftp;
 
+/**
+ * FTP回复功能组枚举
+ */
 public enum ReplyFunctionGroup {
 	/**
 	 * 语法
@@ -35,10 +38,21 @@ public enum ReplyFunctionGroup {
 	 * <p>这些回复指出服务器文件系统相对于请求的传输或其他文件系统操作的状态。</p>
 	 */
 	FILE_SYSTEM(5, "File system");
-
+	/**
+	 * 功能组
+	 */
 	private final int    group;
+	/**
+	 * 描述
+	 */
 	private final String description;
 
+	/**
+	 * 构造函数
+	 *
+	 * @param group       功能组
+	 * @param description 描述
+	 */
 	ReplyFunctionGroup(int group, String description) {
 		this.group       = group;
 		this.description = description;
@@ -66,10 +80,20 @@ public enum ReplyFunctionGroup {
 		};
 	}
 
+	/**
+	 * 获取功能组的整数值
+	 *
+	 * @return
+	 */
 	public int getGroup() {
 		return group;
 	}
 
+	/**
+	 * 获取功能组的描述
+	 *
+	 * @return
+	 */
 	public String getDescription() {
 		return description;
 	}

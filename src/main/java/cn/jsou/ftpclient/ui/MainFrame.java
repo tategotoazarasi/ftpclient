@@ -11,19 +11,47 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+/**
+ * 主窗口类，提供了Java FTP客户端的图形用户界面
+ */
 public class MainFrame extends JFrame {
-	private static final Logger     logger = LogManager.getLogger(MainFrame.class);
-	private              JTextField serverAddressField;
+	private static final Logger                logger = LogManager.getLogger(MainFrame.class);
+	/**
+	 * 服务器地址输入字段
+	 */
+	private              JTextField            serverAddressField;
+	/**
+	 * 端口号输入字段
+	 */
+	private              JTextField            portField;
+	/**
+	 * 用户名输入字段
+	 */
+	private              JTextField            usernameField;
+	/**
+	 * 密码输入字段
+	 */
+	private              JPasswordField        passwordField;
+	/**
+	 * 连接按钮
+	 */
+	private              JButton               connectButton;
+	/**
+	 * 本地文件浏览组件
+	 */
+	private              FileExplorerComponent localFileExplorer;
+	/**
+	 * 服务器文件浏览组件
+	 */
+	private              FileExplorerComponent serverFileExplorer;
+	/**
+	 * FTP客户端实例
+	 */
+	private              FtpClient             ftpClient;
 
-	private JTextField            portField;
-	private JTextField            usernameField;
-	private JPasswordField        passwordField;
-	private JButton               connectButton;
-	// 使用FileExplorerComponent替代原来的JList
-	private FileExplorerComponent localFileExplorer;
-	private FileExplorerComponent serverFileExplorer;
-	private FtpClient ftpClient;
-
+	/**
+	 * 构造函数，初始化主窗口
+	 */
 	public MainFrame() {
 		setTitle("Java FTP Client");
 		setSize(800, 600);
@@ -43,8 +71,10 @@ public class MainFrame extends JFrame {
 		});
 	}
 
+	/**
+	 * 初始化用户界面组件
+	 */
 	private void initUI() {
-		// Create the top panel for server address, username, password, and connect button
 		JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		serverAddressField = new JTextField(15);
@@ -60,7 +90,7 @@ public class MainFrame extends JFrame {
 		passwordField.setText("password");
 		//DEBUG
 
-		connectButton.addActionListener(e -> connectToFtp());
+		connectButton.addActionListener(e -> initFtp());
 
 		topPanel.add(new JLabel("服务器地址:"));
 		topPanel.add(serverAddressField);
@@ -72,13 +102,12 @@ public class MainFrame extends JFrame {
 		topPanel.add(passwordField);
 		topPanel.add(connectButton);
 
-		// Create the main split pane to show local and server files
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
 		// 初始化本地和服务器的FileExplorerComponent实例
 		localFileExplorer  =
-				new FileExplorerComponent(new NativeFileSystemProvider(), System.getProperty("user.home"), false, this);
-		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/", true, this);
+				new FileExplorerComponent(new NativeFileSystemProvider(), System.getProperty("user.home"), false);
+		serverFileExplorer = new FileExplorerComponent(new VirtualFileSystem(null), "/", true);
 		localFileExplorer.setPeer(serverFileExplorer);
 		serverFileExplorer.setPeer(localFileExplorer);
 
@@ -91,7 +120,10 @@ public class MainFrame extends JFrame {
 		getContentPane().add(splitPane, BorderLayout.CENTER);
 	}
 
-	private void connectToFtp() {
+	/**
+	 * 初始化FTP客户端，连接到服务器并尝试登录
+	 */
+	private void initFtp() {
 		String server   = serverAddressField.getText();
 		String port     = portField.getText();
 		String username = usernameField.getText();

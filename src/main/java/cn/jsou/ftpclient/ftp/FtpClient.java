@@ -16,19 +16,49 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * FTP客户端类，用于建立和管理FTP连接，以及执行FTP命令
+ */
 public class FtpClient {
 	private static final Logger            logger     = LogManager.getLogger(FtpClient.class);
+	/**
+	 * 服务器信息，包括系统信息和支持的特性
+	 */
 	public final         ServerInfo        serverInfo = new ServerInfo();
-	private final        String            server;
+	/**
+	 * 与FTP服务器的控制连接套接字
+	 */
 	private final        Socket            serverSocket;
+	/**
+	 * 用于发送FTP命令和接收响应的工具类
+	 */
 	private final        FtpCommands       ftpCommands;
+	/**
+	 * 数据服务器运行的线程
+	 */
 	private final        Thread            serverThread;
-	public DataServer        dataServer;
+	/**
+	 * 数据服务器，用于处理数据连接
+	 */
+	public               DataServer        dataServer;
+	/**
+	 * 已登录用户的用户名
+	 */
 	public               String            username;
-	public VirtualFileSystem remoteFs = new VirtualFileSystem(this);
+	/**
+	 * 远程虚拟文件系统，用于管理FTP服务器上的文件系统
+	 */
+	public               VirtualFileSystem remoteFs   = new VirtualFileSystem(this);
 
+	/**
+	 * 构造函数，初始化FTP客户端
+	 *
+	 * @param server FTP服务器的地址
+	 * @param port   FTP服务器的端口号
+	 *
+	 * @throws IOException 如果无法建立与FTP服务器的连接
+	 */
 	public FtpClient(String server, String port) throws IOException {
-		this.server       = server;
 		this.serverSocket = new Socket(server, Integer.parseInt(port));
 		this.ftpCommands  = new FtpCommands(serverSocket);
 		this.dataServer   = new DataServer(serverSocket.getLocalAddress());
@@ -41,7 +71,16 @@ public class FtpClient {
 		ftpCommands.readResponse();
 	}
 
-	// 登录方法
+	/**
+	 * 登录FTP服务器
+	 *
+	 * @param username 用户名
+	 * @param password 密码
+	 *
+	 * @return 如果登录成功，返回true；否则返回false
+	 *
+	 * @throws IOException 如果发送登录命令或读取响应时出现IO异常
+	 */
 	public boolean login(String username, String password) throws IOException {
 		Response userResp = ftpCommands.userName(username);
 		if (!userResp.isSuccess()) {
@@ -55,6 +94,11 @@ public class FtpClient {
 		return true;
 	}
 
+	/**
+	 * 初始化客户端，查询服务器系统信息、支持的特性等
+	 *
+	 * @throws IOException 如果发送命令或读取响应时出现IO异常
+	 */
 	public void init() throws IOException {
 		Response sysResp = ftpCommands.system();
 		if (sysResp.isSuccess()) {
@@ -106,6 +150,15 @@ public class FtpClient {
 		machineListDictionary(remoteFs.getCurrentDirectoryPath());
 	}
 
+	/**
+	 * 使用MLSD命令获取指定目录的详细列表，并更新远程虚拟文件系统
+	 *
+	 * @param name 目录的绝对路径
+	 *
+	 * @return 如果成功获取目录列表，返回true；否则返回false
+	 *
+	 * @throws IOException IOException 如果发送MLSD命令或读取响应时出现IO异常
+	 */
 	public boolean machineListDictionary(String name) throws IOException {
 		Response cwdResp = ftpCommands.changeWorkingDirectory(name);
 		if (!cwdResp.isSuccess()) {
@@ -118,7 +171,6 @@ public class FtpClient {
 				logger.warn("Failed to set data port with reply code: {}", portResp.getReplyCode());
 			}
 			if (serverInfo.hasFeature("MLSD")) {
-				//dataServer = new DataServer(serverSocket.getLocalAddress());
 				ConnectionHandler ch = new MLSDHandler(remoteFs);
 				dataServer.setConnectionHandler(ch);
 				Response mlsdResp = ftpCommands.machineListDictionary();
@@ -138,6 +190,13 @@ public class FtpClient {
 		return false;
 	}
 
+	/**
+	 * 上传文件到FTP服务器
+	 *
+	 * @param file 要上传的本地文件
+	 *
+	 * @return 如果文件上传成功，返回true；否则返回false
+	 */
 	public boolean uploadFile(java.io.File file) {
 		try {
 			Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
@@ -159,6 +218,13 @@ public class FtpClient {
 		return true;
 	}
 
+	/**
+	 * 上传目录到FTP服务器
+	 *
+	 * @param file 要上传的本地目录
+	 *
+	 * @return 如果目录上传成功，返回true；否则返回false
+	 */
 	public boolean uploadDirectory(java.io.File file) {
 		String current = remoteFs.getCurrentDirectoryPath();
 		try {
@@ -191,6 +257,14 @@ public class FtpClient {
 		}
 	}
 
+	/**
+	 * 从FTP服务器下载文件
+	 *
+	 * @param filename filename 要下载的文件名
+	 * @param file     本地文件的存储位置
+	 *
+	 * @return 如果文件下载成功，返回true；否则返回false
+	 */
 	public boolean downloadFile(String filename, java.io.File file) {
 		try {
 			Response portResp = ftpCommands.dataPort(dataServer.serverSocket);
@@ -212,6 +286,14 @@ public class FtpClient {
 		return true;
 	}
 
+	/**
+	 * 从FTP服务器下载目录
+	 *
+	 * @param dirname 要下载的目录名
+	 * @param file    本地目录的存储位置
+	 *
+	 * @return 如果目录下载成功，返回true；否则返回false
+	 */
 	public boolean downloadDirectory(String dirname, java.io.File file) {
 		String current = remoteFs.getCurrentDirectoryPath();
 		try {
@@ -246,6 +328,12 @@ public class FtpClient {
 		return true;
 	}
 
+	/**
+	 * 重命名文件或目录
+	 *
+	 * @param oldPathname 旧文件名（相对路径）
+	 * @param newFilename 新文件名（相对路径）
+	 */
 	public void rename(String oldPathname, String newFilename) {
 		try {
 			Response renameResp = ftpCommands.renameFrom(oldPathname);
@@ -261,6 +349,11 @@ public class FtpClient {
 		}
 	}
 
+	/**
+	 * 删除文件或目录
+	 *
+	 * @param pathname 文件或目录的绝对路径
+	 */
 	public void delete(String pathname) {
 		try {
 			if (remoteFs.isDirectory(pathname)) {
@@ -281,6 +374,11 @@ public class FtpClient {
 		}
 	}
 
+	/**
+	 * 创建目录
+	 *
+	 * @param pathname 目录的路径
+	 */
 	public void makeDirectory(String pathname) {
 		try {
 			Response mkdResp = ftpCommands.makeDirectory(pathname);
@@ -292,6 +390,9 @@ public class FtpClient {
 		}
 	}
 
+	/**
+	 * 登出FTP服务器
+	 */
 	public void logout() {
 		try {
 			ftpCommands.logout();
@@ -300,6 +401,9 @@ public class FtpClient {
 		}
 	}
 
+	/**
+	 * 关闭FTP客户端
+	 */
 	public void close() {
 		try {
 			ftpCommands.close();

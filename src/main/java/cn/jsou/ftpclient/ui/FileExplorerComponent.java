@@ -1,6 +1,7 @@
 package cn.jsou.ftpclient.ui;
 
 import cn.jsou.ftpclient.ftp.FtpClient;
+import cn.jsou.ftpclient.utils.SvgIconLoader;
 import cn.jsou.ftpclient.utils.TimeUtil;
 import cn.jsou.ftpclient.vfs.File;
 import cn.jsou.ftpclient.vfs.FileSystemProvider;
@@ -18,33 +19,79 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 文件浏览组件类，用于在UI中显示和管理本地或远程的文件系统
+ */
 public class FileExplorerComponent extends JPanel {
-	private final MainFrame mainFrame;
+	/**
+	 * 当前路径标签，显示当前浏览的目录路径
+	 */
 	private final JLabel currentPathLabel = new JLabel(" ");
+	/**
+	 * 向上一级目录的按钮
+	 */
 	JButton btnGoUp           = new JButton();
+	/**
+	 * 创建新目录的按钮
+	 */
 	JButton btnNewFolder      = new JButton();
+	/**
+	 * 删除文件或目录的按钮
+	 */
 	JButton btnDelete         = new JButton();
+	/**
+	 * 上传或下载文件的按钮
+	 */
 	JButton btnUploadDownload = new JButton();
+	/**
+	 * 刷新当前目录视图的按钮
+	 */
 	JButton btnRefresh        = new JButton();
+	/**
+	 * 文件系统提供者，负责文件操作的具体实现
+	 */
 	private FileSystemProvider    fileSystemProvider;
+	/**
+	 * 文件表格，显示当前目录下的文件和目录
+	 */
 	private JTable                fileTable;
+	/**
+	 * 当前浏览的目录路径
+	 */
 	private String                currentPath;
+	/**
+	 * FTP客户端实例，用于远程文件操作
+	 */
 	private FtpClient             ftpClient;
+	/**
+	 * 表示当前组件是用于本地文件系统还是远程文件系统
+	 */
 	private boolean               isRemote = false;
+	/**
+	 * 与当前组件配对的另一个文件浏览组件，用于同步操作和显示
+	 */
 	private FileExplorerComponent peer;
 
+	/**
+	 * 构造函数，初始化文件浏览组件
+	 *
+	 * @param fileSystemProvider 文件系统提供者
+	 * @param initialPath        初始浏览的目录路径
+	 * @param isRemote           是否为远程文件系统
+	 */
 	public FileExplorerComponent(FileSystemProvider fileSystemProvider,
 	                             String initialPath,
-	                             boolean isRemote,
-	                             MainFrame mainFrame) {
+	                             boolean isRemote) {
 		this.fileSystemProvider = fileSystemProvider;
 		this.currentPath        = initialPath;
 		initUI();
 		updateFileList(initialPath);
-		this.isRemote  = isRemote;
-		this.mainFrame = mainFrame;
+		this.isRemote = isRemote;
 	}
 
+	/**
+	 * 初始化用户界面组件
+	 */
 	private void initUI() {
 		setLayout(new BorderLayout());
 
@@ -193,12 +240,20 @@ public class FileExplorerComponent extends JPanel {
 		updateButtonStates();
 	}
 
+	/**
+	 * 刷新当前目录的文件列表
+	 */
 	public void refresh() {
 		updateFileList(currentPath);
 	}
 
+	/**
+	 * 更新当前目录下的文件列表
+	 *
+	 * @param path 要更新的目录绝对路径
+	 */
 	public void updateFileList(String path) {
-		String[] columnNames = {"Name", "Size", "Creation Time", "Modified Time"};
+		String[] columnNames = {"名称", "大小", "创建时间", "修改时间"};
 		DefaultTableModel model       = new DefaultTableModel(columnNames, 0);
 
 		java.util.List<String> directories = fileSystemProvider.getDirectories(path);
@@ -247,6 +302,9 @@ public class FileExplorerComponent extends JPanel {
 		this.repaint();
 	}
 
+	/**
+	 * 为文件表格添加鼠标监听器，处理双击事件和右键菜单显示
+	 */
 	private void addTableMouseListener() {
 		fileTable.addMouseListener(new MouseAdapter() {
 			@Override
@@ -293,14 +351,30 @@ public class FileExplorerComponent extends JPanel {
 		});
 	}
 
+	/**
+	 * 弹出输入对话框请求用户输入
+	 *
+	 * @param message 对话框显示的消息
+	 * @param title   对话框的标题
+	 *
+	 * @return 用户输入的字符串。如果用户取消，则返回null
+	 */
 	private String promptForName(String message, String title) {
 		return JOptionPane.showInputDialog(this, message, title, JOptionPane.PLAIN_MESSAGE);
 	}
 
+	/**
+	 * 设置与当前文件浏览器组件配对的另一个文件浏览器组件
+	 *
+	 * @param peer 另一个文件浏览器组件实例
+	 */
 	public void setPeer(FileExplorerComponent peer) {
 		this.peer = peer;
 	}
 
+	/**
+	 * 更新按钮的启用状态，基于是否有文件或目录被选中
+	 */
 	private void updateButtonStates() {
 		// 检查表格中是否有选中的行
 		boolean isRowSelected = fileTable.getSelectedRow() != -1;
@@ -310,18 +384,36 @@ public class FileExplorerComponent extends JPanel {
 		btnDelete.setEnabled(isRowSelected);
 	}
 
+	/**
+	 * 设置FTP客户端实例
+	 *
+	 * @param client FTP客户端实例
+	 */
 	public void setFtpClient(FtpClient client) {
 		this.ftpClient = client;
 	}
 
+	/**
+	 * 设置文件系统提供者
+	 *
+	 * @param fsp 文件系统提供者实例
+	 */
 	public void setFileSystemProvider(FileSystemProvider fsp) {
 		this.fileSystemProvider = fsp;
 	}
 
+	/**
+	 * 获取当前浏览的目录路径
+	 *
+	 * @return 当前浏览的目录路径
+	 */
 	public String getCurrentPath() {
 		return currentPath;
 	}
 
+	/**
+	 * 上传或下载选中的文件或目录
+	 */
 	private void uploadDownloadSelectedFiles() {
 		if (ftpClient == null) {
 			JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
@@ -331,7 +423,7 @@ public class FileExplorerComponent extends JPanel {
 		int[] selectedRows = fileTable.getSelectedRows();
 		for (int viewRowIndex : selectedRows) {
 			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
-			String itemName = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+			String itemName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
 			// 构建要上传或下载的文件或目录的路径
 			Path itemPath = Paths.get(currentPath, itemName);
@@ -360,6 +452,12 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	/**
+	 * 下载指定的目录
+	 *
+	 * @param remoteDirName 远程目录相对路径
+	 * @param localDir      本地目录文件对象
+	 */
 	private void downloadDirectory(String remoteDirName, java.io.File localDir) {
 		// 假设已经处理了目录存在的情况和是否覆盖的决定
 
@@ -370,17 +468,21 @@ public class FileExplorerComponent extends JPanel {
 		showTransferResult(success, "下载目录", remoteDirName);
 	}
 
-
+	/**
+	 * 上传指定的目录
+	 *
+	 * @param directory 要上传的本地目录文件对象
+	 */
 	private void uploadDirectory(java.io.File directory) {
-		// Assume that the existence of the directory and the decision to overwrite are handled elsewhere
-
-		// Perform the directory upload operation
 		boolean success = ftpClient.uploadDirectory(directory);
-
-		// Show the result of the directory upload
 		showTransferResult(success, "上传目录", directory.getName());
 	}
 
+	/**
+	 * 上传指定的文件
+	 *
+	 * @param fileName 要上传的文件名称
+	 */
 	private void uploadFile(String fileName) {
 		Path         filePath     = Paths.get(currentPath, fileName);
 		java.io.File fileToUpload = filePath.toFile();
@@ -397,6 +499,11 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	/**
+	 * 下载指定的文件
+	 *
+	 * @param fileName 要下载的文件的相对路径名称
+	 */
 	private void downloadFile(String fileName) {
 		java.io.File localFile = new java.io.File(peer.getCurrentPath(), fileName);
 
@@ -410,6 +517,13 @@ public class FileExplorerComponent extends JPanel {
 		showTransferResult(success, "下载", fileName);
 	}
 
+	/**
+	 * 弹出对话框询问用户是否覆盖已存在的文件
+	 *
+	 * @param fileName 要覆盖的文件名称
+	 *
+	 * @return 用户选择覆盖则返回true，否则返回false
+	 */
 	private boolean userConfirmsOverwrite(String fileName) {
 		int result = JOptionPane.showConfirmDialog(this,
 		                                           "目标位置已存在文件: " + fileName + "。是否覆盖？",
@@ -418,6 +532,13 @@ public class FileExplorerComponent extends JPanel {
 		return result == JOptionPane.YES_OPTION;
 	}
 
+	/**
+	 * 显示文件传输结果的对话框
+	 *
+	 * @param success  操作是否成功
+	 * @param action   操作类型（"上传"或"下载"）
+	 * @param fileName 操作的文件名称
+	 */
 	private void showTransferResult(boolean success, String action, String fileName) {
 		if (success) {
 			JOptionPane.showMessageDialog(this,
@@ -431,6 +552,11 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	/**
+	 * 删除选中的项（文件或目录）
+	 *
+	 * @param selectedRows 选中行的数组
+	 */
 	private void deleteSelectedItems(int[] selectedRows) {
 		if (selectedRows.length == 0) {
 			JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
@@ -456,6 +582,11 @@ public class FileExplorerComponent extends JPanel {
 		}
 	}
 
+	/**
+	 * 创建并返回表格的右键菜单
+	 *
+	 * @return 表格的右键弹出菜单
+	 */
 	private JPopupMenu createTablePopupMenu() {
 		JPopupMenu popupMenu = new JPopupMenu();
 

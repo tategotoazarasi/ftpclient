@@ -13,16 +13,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * 实现ConnectionHandler接口，用于处理MLSD命令的连接
+ */
 public class MLSDHandler implements ConnectionHandler {
-	private static final Logger logger = LogManager.getLogger(MLSDHandler.class);
+	private static final Logger            logger = LogManager.getLogger(MLSDHandler.class);
+	/**
+	 * 虚拟文件系统，用于创建文件和目录
+	 */
+	private final        VirtualFileSystem vfs;
+	/**
+	 * 用于同步等待处理完成的闭锁
+	 */
+	private final        CountDownLatch    latch  = new CountDownLatch(1);
 
-	private final VirtualFileSystem vfs;
-	private final CountDownLatch latch = new CountDownLatch(1);
-
+	/**
+	 * 构造函数
+	 *
+	 * @param vfs 用于文件操作的虚拟文件系统实例
+	 */
 	public MLSDHandler(VirtualFileSystem vfs) {
 		this.vfs = vfs;
 	}
 
+	/**
+	 * 处理传入的连接
+	 *
+	 * @param socket 传入连接的套接字。
+	 */
 	@Override public void handleConnection(Socket socket) {
 		try (InputStream inputStream = socket.getInputStream();
 		     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -59,6 +77,11 @@ public class MLSDHandler implements ConnectionHandler {
 		}
 	}
 
+	/**
+	 * 等待所有连接的处理完成
+	 *
+	 * @throws InterruptedException 如果线程在等待时被中断
+	 */
 	@Override public void waitForCompletion() throws InterruptedException {
 		latch.await(); // 等待处理完成
 	}

@@ -1,5 +1,8 @@
 package cn.jsou.ftpclient.ftp;
 
+/**
+ * FTP命令
+ */
 public enum Command {
 	/**
 	 * 用户名

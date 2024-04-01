@@ -1,5 +1,8 @@
 package cn.jsou.ftpclient.ftp;
 
+/**
+ * FTP回复类型枚举
+ */
 public enum ReplyType {
 	/**
 	 * 正面预备回复
@@ -37,10 +40,21 @@ public enum ReplyType {
 	 * 所以人类用户可能希望在未来的某个时刻通过直接行动指导他的用户进程重新启动命令序列（例如，在拼写被更改后，或用户已更改他的目录状态后）。</p>
 	 */
 	PERMANENT_NEGATIVE_COMPLETION(5, "Permanent Negative Completion reply");
-
+	/**
+	 * 回复类型
+	 */
 	private final int    type;
+	/**
+	 * 描述
+	 */
 	private final String description;
 
+	/**
+	 * 构造函数
+	 *
+	 * @param type        回复类型
+	 * @param description 描述
+	 */
 	ReplyType(int type, String description) {
 		this.type        = type;
 		this.description = description;
@@ -65,10 +79,20 @@ public enum ReplyType {
 		};
 	}
 
+	/**
+	 * 获取回复类型的整数值
+	 *
+	 * @return 回复类型的整数值
+	 */
 	public int getType() {
 		return type;
 	}
 
+	/**
+	 * 获取回复类型的描述
+	 *
+	 * @return 回复类型的描述
+	 */
 	public String getDescription() {
 		return description;
 	}

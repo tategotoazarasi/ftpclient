@@ -1,5 +1,8 @@
 package cn.jsou.ftpclient.ftp;
 
+/**
+ * FTP响应代码枚举
+ */
 public enum ReplyCode {
 	/**
 	 * 重启标记回复
@@ -183,10 +186,21 @@ public enum ReplyCode {
 	 * <p>文件名不允许。</p>
 	 */
 	REQUESTED_ACTION_NOT_TAKEN_FILE_NAME_NOT_ALLOWED(553, "Requested action not taken. File name not allowed.");
-
+	/**
+	 * 响应代码
+	 */
 	private final int    code;
+	/**
+	 * 响应消息
+	 */
 	private final String message;
 
+	/**
+	 * 构造函数
+	 *
+	 * @param code    响应代码
+	 * @param message 响应消息
+	 */
 	ReplyCode(int code, String message) {
 		this.code    = code;
 		this.message = message;
@@ -224,10 +238,20 @@ public enum ReplyCode {
 		throw new IllegalArgumentException("No matching ReplyCode found for code: " + code);
 	}
 
+	/**
+	 * 获取响应代码
+	 *
+	 * @return 响应代码
+	 */
 	public int getCode() {
 		return code;
 	}
 
+	/**
+	 * 获取响应消息
+	 *
+	 * @return 响应消息
+	 */
 	public String getMessage() {
 		return message;
 	}

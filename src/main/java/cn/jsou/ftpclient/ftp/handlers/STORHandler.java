@@ -7,15 +7,35 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * 实现ConnectionHandler接口，用于处理STOR命令的连接
+ * <p>该类负责将文件发送到FTP客户端</p>
+ */
 public class STORHandler implements ConnectionHandler {
 	private static final Logger         logger = LogManager.getLogger(STORHandler.class);
+	/**
+	 * 用于同步等待处理完成的闭锁
+	 */
 	private final        CountDownLatch latch  = new CountDownLatch(1);
+	/**
+	 * 需要发送的文件
+	 */
 	private final        java.io.File   file;
 
+	/**
+	 * 构造函数
+	 *
+	 * @param file 发送文件时文件的位置
+	 */
 	public STORHandler(java.io.File file) {
 		this.file = file;
 	}
 
+	/**
+	 * 处理传入的连接，读取指定文件的数据并通过套接字发送
+	 *
+	 * @param socket 传入连接的套接字。
+	 */
 	@Override public void handleConnection(Socket socket) {
 		try (OutputStream outputStream = socket.getOutputStream();
 		     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
@@ -38,6 +58,11 @@ public class STORHandler implements ConnectionHandler {
 		}
 	}
 
+	/**
+	 * 等待所有连接的处理完成
+	 *
+	 * @throws InterruptedException 如果线程在等待时被中断
+	 */
 	@Override public void waitForCompletion() throws InterruptedException {
 		latch.await(); // 等待处理完成
 	}

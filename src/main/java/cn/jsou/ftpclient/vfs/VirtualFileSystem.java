@@ -10,33 +10,73 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 实现了虚拟文件系统的类，提供了操作远程FTP服务器上的文件和目录的方法
+ */
 public class VirtualFileSystem implements FileSystemProvider {
 	private static final Logger    logger = LogManager.getLogger(VirtualFileSystem.class);
-	private final        Directory root; // 根目录
+	/**
+	 * 根目录对象
+	 */
+	private final        Directory root;
+	/**
+	 * FTP客户端实例，用于与远程服务器进行通信
+	 */
 	private final        FtpClient ftpClient;
-	private              Directory currentDirectory; // 当前目录
+	/**
+	 * 当前工作目录
+	 */
+	private              Directory currentDirectory;
 
+	/**
+	 * 构造函数，初始化虚拟文件系统
+	 *
+	 * @param ftpClient FTP客户端实例
+	 */
 	public VirtualFileSystem(FtpClient ftpClient) {
 		this.root             = new Directory("/");
 		this.currentDirectory = root;
-		this.ftpClient = ftpClient;
+		this.ftpClient        = ftpClient;
 	}
 
-	// 创建目录
+	/**
+	 * 在当前目录下创建新目录
+	 *
+	 * @param name 新目录的名称
+	 */
 	public void createDirectory(String name) {
 		currentDirectory.createDirectory(name);
 	}
 
-	// 创建文件
+	/**
+	 * 在当前目录下创建新文件
+	 *
+	 * @param name 文件名称
+	 * @param size 文件大小
+	 */
 	public void createFile(String name, long size) {
 		currentDirectory.createFile(name, size);
 	}
 
-	// 创建文件
+	/**
+	 * 在当前目录下创建新文件，并设置文件属性
+	 *
+	 * @param name     文件名称
+	 * @param factsMap 文件属性映射表
+	 */
 	public void createFile(String name, Map<String, String> factsMap) {
 		currentDirectory.createFile(name, factsMap);
 	}
 
+	/**
+	 * 递归创建或获取目录
+	 *
+	 * @param current        当前目录
+	 * @param pathComponents 路径组件
+	 * @param index          当前路径组件的索引
+	 *
+	 * @return 目标目录对象
+	 */
 	private Directory createOrGetDirectory(Directory current, String[] pathComponents, int index) {
 		if (index >= pathComponents.length) {
 			return current;
@@ -51,11 +91,22 @@ public class VirtualFileSystem implements FileSystemProvider {
 		return createOrGetDirectory(nextDir, pathComponents, index + 1);
 	}
 
+	/**
+	 * 改变当前工作目录
+	 *
+	 * @param dir 目标目录对象
+	 */
 	public void changeDirectory(Directory dir) {
 		this.currentDirectory = dir;
 	}
 
-	// 切换目录
+	/**
+	 * 改变当前工作目录到指定路径
+	 *
+	 * @param path 目标目录的绝对路径
+	 *
+	 * @return 如果切换成功返回true，否则返回false
+	 */
 	public boolean changeDirectory(String path) {
 		if ("/".equals(path)) {
 			currentDirectory = root;
@@ -80,7 +131,11 @@ public class VirtualFileSystem implements FileSystemProvider {
 		}
 	}
 
-	// 获取当前目录路径
+	/**
+	 * 获取当前目录的路径
+	 *
+	 * @return 当前目录的路径字符串
+	 */
 	public String getCurrentDirectoryPath() {
 		StringBuilder path = new StringBuilder();
 		Directory     temp = currentDirectory;
@@ -92,6 +147,13 @@ public class VirtualFileSystem implements FileSystemProvider {
 		return path.toString();
 	}
 
+	/**
+	 * 获取指定路径下的所有目录
+	 *
+	 * @param path 要查询的绝对路径
+	 *
+	 * @return 目录名称列表
+	 */
 	@Override public List<String> getDirectories(String path) {
 		if (ftpClient == null) {return Collections.emptyList();}
 		try {
@@ -105,6 +167,13 @@ public class VirtualFileSystem implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 获取指定路径下的所有文件
+	 *
+	 * @param path 要查询的绝对路径
+	 *
+	 * @return 文件对象列表
+	 */
 	@Override public List<File> getFiles(String path) {
 		if (ftpClient == null) {return Collections.emptyList();}
 		try {
@@ -117,6 +186,13 @@ public class VirtualFileSystem implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 判断给定的路径是否为目录
+	 *
+	 * @param path 要判断的绝对路径
+	 *
+	 * @return 如果路径是目录，返回true；否则返回false
+	 */
 	@Override
 	public boolean isDirectory(String path) {
 		// 根目录总是存在且是一个目录
@@ -141,6 +217,9 @@ public class VirtualFileSystem implements FileSystemProvider {
 		return true; // 成功遍历完整个路径，且每一部分都存在，因此这是一个目录
 	}
 
+	/**
+	 * 刷新文件系统，重新加载目录和文件列表
+	 */
 	@Override
 	public void refresh() {
 		if (ftpClient == null) {
@@ -155,6 +234,11 @@ public class VirtualFileSystem implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 在指定路径下创建一个新的目录
+	 *
+	 * @param path 要创建目录的绝对路径
+	 */
 	@Override
 	public void mkDir(String path) {
 		if (!isDirectory(path)) {
@@ -174,10 +258,21 @@ public class VirtualFileSystem implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 重命名或移动文件或目录
+	 *
+	 * @param oldPathname 原始相对路径
+	 * @param newFilename 新的文件或目录名称（相对路径）
+	 */
 	@Override public void rename(String oldPathname, String newFilename) {
 		ftpClient.rename(oldPathname, newFilename);
 	}
 
+	/**
+	 * 删除指定的文件或目录
+	 *
+	 * @param filepath 要删除的文件或目录的绝对路径
+	 */
 	@Override public void delete(String filepath) {
 		ftpClient.delete(filepath);
 	}

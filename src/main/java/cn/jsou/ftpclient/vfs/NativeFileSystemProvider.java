@@ -13,9 +13,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 本地文件系统提供者，实现了FileSystemProvider接口，用于操作本地文件系统
+ */
 public class NativeFileSystemProvider implements FileSystemProvider {
 	private static final Logger logger = LogManager.getLogger(NativeFileSystemProvider.class);
 
+	/**
+	 * 获取指定路径下的所有目录
+	 *
+	 * @param path 要查询的绝对路径
+	 *
+	 * @return 目录名称的列表
+	 */
 	@Override
 	public List<String> getDirectories(String path) {
 		java.io.File file = new File(path);
@@ -24,6 +34,13 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		             .collect(Collectors.toList());
 	}
 
+	/**
+	 * 获取指定路径下的所有文件
+	 *
+	 * @param path 要查询的绝对路径
+	 *
+	 * @return 文件对象的列表
+	 */
 	@Override
 	public List<cn.jsou.ftpclient.vfs.File> getFiles(String path) {
 		java.io.File file = new File(path);
@@ -53,16 +70,31 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		             .collect(Collectors.toList());
 	}
 
+	/**
+	 * 判断给定的路径是否为目录
+	 *
+	 * @param path 要判断的绝对路径
+	 *
+	 * @return 如果路径是目录，返回true；否则返回false
+	 */
 	@Override
 	public boolean isDirectory(String path) {
 		java.io.File file = new java.io.File(path);
 		return file.isDirectory();
 	}
 
+	/**
+	 * 刷新文件系统视图
+	 */
 	@Override public void refresh() {
 		// do nothing
 	}
 
+	/**
+	 * 在指定路径下创建新的目录
+	 *
+	 * @param path 要创建目录的绝对路径
+	 */
 	@Override
 	public void mkDir(String path) {
 		File directory = new File(path);
@@ -74,6 +106,12 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 重命名或移动文件或目录
+	 *
+	 * @param oldPathname 原始相对路径
+	 * @param newFilename 新的文件或目录名称（相对路径）
+	 */
 	@Override
 	public void rename(String oldPathname, String newFilename) {
 		if (oldPathname == null || newFilename == null || newFilename.trim().isEmpty()) {
@@ -107,6 +145,11 @@ public class NativeFileSystemProvider implements FileSystemProvider {
 		}
 	}
 
+	/**
+	 * 删除指定的文件或目录
+	 *
+	 * @param filepath 要删除的文件或目录的绝对路径
+	 */
 	@Override public void delete(String filepath) {
 		java.io.File file = new java.io.File(filepath);
 		if (file.exists()) {
