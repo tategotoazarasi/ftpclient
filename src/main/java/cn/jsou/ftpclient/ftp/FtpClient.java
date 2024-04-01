@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -156,6 +157,38 @@ public class FtpClient {
 			return false;
 		}
 		return true;
+	}
+
+	public boolean uploadDirectory(java.io.File file) {
+		String current = remoteFs.getCurrentDirectoryPath();
+		try {
+			if (!file.isDirectory()) {
+				return false;
+			}
+			makeDirectory(file.getName());
+			Response cwdResp = ftpCommands.changeWorkingDirectory(file.getName());
+			if (!cwdResp.isSuccess()) {
+				logger.error("Failed to change working directory to {} with reply code: {}",
+				             file.getName(),
+				             cwdResp.getReplyCode());
+				return false;
+			}
+			remoteFs.changeDirectory(remoteFs.getCurrentDirectoryPath() + '/' + file.getName());
+			for (java.io.File f : Objects.requireNonNull(file.listFiles())) {
+				if (f.isDirectory()) {
+					uploadDirectory(f);
+				} else {
+					uploadFile(f);
+					dataServer.waitHandlerComplete();
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			logger.error("Failed to upload directory", e);
+			return false;
+		} finally {
+			remoteFs.changeDirectory(current);
+		}
 	}
 
 	public boolean downloadFile(String filename, java.io.File file) {

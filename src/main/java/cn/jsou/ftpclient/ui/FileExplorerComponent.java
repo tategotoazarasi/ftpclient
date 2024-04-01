@@ -26,12 +26,12 @@ public class FileExplorerComponent extends JPanel {
 	JButton btnDelete         = new JButton();
 	JButton btnUploadDownload = new JButton();
 	JButton btnRefresh        = new JButton();
-	private FileSystemProvider fileSystemProvider;
-	private JTable             fileTable;
-	private String             currentPath;
-	private FtpClient          ftpClient;
-	private       boolean               isRemote         = false;
-	private       FileExplorerComponent peer;
+	private FileSystemProvider    fileSystemProvider;
+	private JTable                fileTable;
+	private String                currentPath;
+	private FtpClient             ftpClient;
+	private boolean               isRemote = false;
+	private FileExplorerComponent peer;
 
 	public FileExplorerComponent(FileSystemProvider fileSystemProvider,
 	                             String initialPath,
@@ -333,13 +333,34 @@ public class FileExplorerComponent extends JPanel {
 			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
 			String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
-			// 进行上传或下载操作
+			// Construct the path for the file or directory to be uploaded or downloaded
+			Path filePath = Paths.get(currentPath, fileName);
+
+			// Check if the selected item is a directory or a file
 			if (!isRemote) {
-				uploadFile(fileName);
+				java.io.File localFile = filePath.toFile();
+				if (localFile.isDirectory()) {
+					// Upload the directory if isRemote is false and the selected item is a directory
+					uploadDirectory(localFile);
+				} else {
+					// Otherwise, upload the file as usual
+					uploadFile(fileName);
+				}
 			} else {
+				// For downloading (when isRemote is true), handle as in the original method
 				downloadFile(fileName);
 			}
 		}
+	}
+
+	private void uploadDirectory(java.io.File directory) {
+		// Assume that the existence of the directory and the decision to overwrite are handled elsewhere
+
+		// Perform the directory upload operation
+		boolean success = ftpClient.uploadDirectory(directory);
+
+		// Show the result of the directory upload
+		showTransferResult(success, "上传目录", directory.getName());
 	}
 
 	private void uploadFile(String fileName) {
