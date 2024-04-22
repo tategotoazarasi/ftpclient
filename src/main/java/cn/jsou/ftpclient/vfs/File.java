@@ -63,10 +63,12 @@ public class File {
 		this.name = name;
 		this.size = Long.parseLong(factsMap.getOrDefault("size", "0"));
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		this.modifiedTime =
-				LocalDateTime.parse(factsMap.getOrDefault("modify", LocalDateTime.now().format(formatter)), formatter);
-		this.createdTime  =
-				LocalDateTime.parse(factsMap.getOrDefault("create", LocalDateTime.now().format(formatter)), formatter);
+		this.modifiedTime = factsMap.containsKey("modify") ?
+		                    LocalDateTime.parse(factsMap.getOrDefault("modify", LocalDateTime.now().format(formatter)),
+		                                        formatter) : null;
+		this.createdTime  = factsMap.containsKey("create") ?
+		                    LocalDateTime.parse(factsMap.getOrDefault("create", LocalDateTime.now().format(formatter)),
+		                                        formatter) : null;
 	}
 
 	/**

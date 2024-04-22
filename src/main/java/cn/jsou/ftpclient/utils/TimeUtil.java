@@ -24,6 +24,9 @@ public class TimeUtil {
 	 * @return 格式化后的相对时间
 	 */
 	public static String formatRelativeTime(LocalDateTime dateTime) {
+		if (dateTime == null) {
+			return "";
+		}
 		long months = ChronoUnit.MONTHS.between(dateTime, LocalDateTime.now());
 		if ((months > 12)) {
 			// 对于超过1年的，直接返回具体日期
