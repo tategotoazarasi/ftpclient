@@ -129,7 +129,7 @@ public class FileExplorerComponent extends JPanel {
 
 				if (parentDirectory != null) {
 					// 更新当前路径
-					currentPath = parentDirectory.toString();
+					currentPath = GlobalPathUtil.normalizePath(parentDirectory.toString());
 					// 刷新文件列表以显示父目录的内容
 					updateFileList(currentPath);
 				}
@@ -145,17 +145,17 @@ public class FileExplorerComponent extends JPanel {
 				}
 
 				// 构建新目录的完整路径
-				Path newPath = Path.of((currentPath.equals("/") ? "" : currentPath) + '/' + newFolderName);
+				Path newPath = Path.of(GlobalPathUtil.normalizePath(currentPath + '/' + newFolderName));
 
 				// 检查目录是否已存在
-				if (fileSystemProvider.isDirectory(GlobalPathUtil.toUnixPath(newPath.toString()))) {
+				if (fileSystemProvider.isDirectory(GlobalPathUtil.normalizePath(newPath.toString()))) {
 					JOptionPane.showMessageDialog(this, "目录已存在。", "错误", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
 				try {
 					// 尝试创建新目录
-					fileSystemProvider.mkDir(GlobalPathUtil.toUnixPath(newPath.toString()));
+					fileSystemProvider.mkDir(GlobalPathUtil.normalizePath(newPath.toString()));
 					// 刷新当前目录的视图
 					updateFileList(currentPath);
 				} catch (Exception ex) {
@@ -435,7 +435,7 @@ public class FileExplorerComponent extends JPanel {
 			for (int viewRowIndex : selectedRows) {
 				int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
 				String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
-				String filePath = Path.of((currentPath.equals("/") ? "" : currentPath) + "/" + fileName).toString();
+				String filePath = GlobalPathUtil.normalizePath(currentPath + "/" + fileName);
 				fileSystemProvider.delete(filePath);
 			}
 			refresh();
