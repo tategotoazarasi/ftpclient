@@ -1,6 +1,7 @@
 package cn.jsou.ftpclient.ui;
 
 import cn.jsou.ftpclient.ftp.FtpClient;
+import cn.jsou.ftpclient.utils.GlobalPathUtil;
 import cn.jsou.ftpclient.utils.SvgIconLoader;
 import cn.jsou.ftpclient.utils.TimeUtil;
 import cn.jsou.ftpclient.vfs.File;
@@ -147,14 +148,14 @@ public class FileExplorerComponent extends JPanel {
 				Path newPath = Paths.get(currentPath, newFolderName);
 
 				// 检查目录是否已存在
-				if (fileSystemProvider.isDirectory(newPath.toString())) {
+				if (fileSystemProvider.isDirectory(GlobalPathUtil.toUnixPath(newPath.toString()))) {
 					JOptionPane.showMessageDialog(this, "目录已存在。", "错误", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
 				try {
 					// 尝试创建新目录
-					fileSystemProvider.mkDir(newPath.toString());
+					fileSystemProvider.mkDir(GlobalPathUtil.toUnixPath(newPath.toString()));
 					// 刷新当前目录的视图
 					updateFileList(currentPath);
 				} catch (Exception ex) {

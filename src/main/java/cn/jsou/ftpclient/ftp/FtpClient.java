@@ -9,6 +9,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
@@ -308,14 +309,14 @@ public class FtpClient {
 				return false;
 			}
 			machineListDictionary(dirname);
-			remoteFs.changeDirectory(remoteFs.getCurrentDirectoryPath() + '/' + dirname);
+			remoteFs.changeDirectory(remoteFs.getCurrentDirectoryPath() + File.separator + dirname);
 			for (var f : remoteFs.getFiles(remoteFs.getCurrentDirectoryPath())) {
-				java.io.File newFile = new java.io.File(file.getAbsolutePath() + '/' + f.getName());
+				java.io.File newFile = new java.io.File(file.getAbsolutePath() + File.separator + f.getName());
 				downloadFile(f.getName(), newFile);
 				dataServer.waitHandlerComplete();
 			}
 			for (var d : remoteFs.getDirectories(remoteFs.getCurrentDirectoryPath())) {
-				java.io.File newFile = new java.io.File(file.getAbsolutePath() + '/' + d);
+				java.io.File newFile = new java.io.File(file.getAbsolutePath() + File.separator + d);
 				newFile.mkdir();
 				downloadDirectory(d, newFile);
 			}
