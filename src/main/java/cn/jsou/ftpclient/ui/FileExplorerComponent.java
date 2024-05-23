@@ -145,7 +145,7 @@ public class FileExplorerComponent extends JPanel {
 				}
 
 				// 构建新目录的完整路径
-				Path newPath = Path.of(currentPath + '/' + newFolderName);
+				Path newPath = Path.of((currentPath.equals("/") ? "" : currentPath) + '/' + newFolderName);
 
 				// 检查目录是否已存在
 				if (fileSystemProvider.isDirectory(GlobalPathUtil.toUnixPath(newPath.toString()))) {
@@ -413,43 +413,32 @@ public class FileExplorerComponent extends JPanel {
 	}
 
 	/**
-	 * 上传或下载选中的文件或目录
+	 * 删除选中的项（文件或目录）
+	 *
+	 * @param selectedRows 选中行的数组
 	 */
-	private void uploadDownloadSelectedFiles() {
-		if (ftpClient == null) {
-			JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
+	private void deleteSelectedItems(int[] selectedRows) {
+		if (selectedRows.length == 0) {
+			JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
-		int[] selectedRows = fileTable.getSelectedRows();
-		for (int viewRowIndex : selectedRows) {
-			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
-			String itemName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+		// 根据选中的行数显示不同的确认消息
+		String
+				message =
+				selectedRows.length == 1 ?
+				"确定要删除选中的项吗？" :
+				"确定要删除选中的 " + selectedRows.length + " 项吗？";
 
-			// 构建要上传或下载的文件或目录的路径
-			Path itemPath = Path.of(currentPath + '/' + itemName);
-
-			if (!isRemote) {
-				// 本地上传逻辑
-				java.io.File localFile = itemPath.toFile();
-				if (localFile.isDirectory()) {
-					// 如果是目录，则上传目录
-					uploadDirectory(localFile);
-				} else {
-					// 如果是文件，则上传文件
-					uploadFile(itemName);
-				}
-			} else {
-				// 远程下载逻辑
-				java.io.File localDir = new java.io.File(peer.getCurrentPath());
-				if (fileSystemProvider.isDirectory(itemPath.toString())) {
-					// 如果选中的是目录，则下载目录
-					downloadDirectory(itemName, new java.io.File(localDir, itemName));
-				} else {
-					// 如果选中的是文件，则下载文件
-					downloadFile(itemName);
-				}
+		int confirmation = JOptionPane.showConfirmDialog(this, message, "确认删除", JOptionPane.YES_NO_OPTION);
+		if (confirmation == JOptionPane.YES_OPTION) {
+			for (int viewRowIndex : selectedRows) {
+				int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
+				String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
+				String filePath = Path.of((currentPath.equals("/") ? "" : currentPath) + "/" + fileName).toString();
+				fileSystemProvider.delete(filePath);
 			}
+			refresh();
 		}
 	}
 
@@ -554,32 +543,43 @@ public class FileExplorerComponent extends JPanel {
 	}
 
 	/**
-	 * 删除选中的项（文件或目录）
-	 *
-	 * @param selectedRows 选中行的数组
+	 * 上传或下载选中的文件或目录
 	 */
-	private void deleteSelectedItems(int[] selectedRows) {
-		if (selectedRows.length == 0) {
-			JOptionPane.showMessageDialog(this, "没有选中任何项。", "错误", JOptionPane.ERROR_MESSAGE);
+	private void uploadDownloadSelectedFiles() {
+		if (ftpClient == null) {
+			JOptionPane.showMessageDialog(this, "请先连接到FTP服务器", "错误", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
-		// 根据选中的行数显示不同的确认消息
-		String
-				message =
-				selectedRows.length == 1 ?
-				"确定要删除选中的项吗？" :
-				"确定要删除选中的 " + selectedRows.length + " 项吗？";
+		int[] selectedRows = fileTable.getSelectedRows();
+		for (int viewRowIndex : selectedRows) {
+			int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
+			String itemName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
-		int confirmation = JOptionPane.showConfirmDialog(this, message, "确认删除", JOptionPane.YES_NO_OPTION);
-		if (confirmation == JOptionPane.YES_OPTION) {
-			for (int viewRowIndex : selectedRows) {
-				int    modelRowIndex = fileTable.convertRowIndexToModel(viewRowIndex);
-				String fileName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
-				String filePath      = Paths.get(currentPath, fileName).toString();
-				fileSystemProvider.delete(filePath);
+			// 构建要上传或下载的文件或目录的路径
+			Path itemPath = Path.of((currentPath.equals("/") ? "" : currentPath) + '/' + itemName);
+
+			if (!isRemote) {
+				// 本地上传逻辑
+				java.io.File localFile = itemPath.toFile();
+				if (localFile.isDirectory()) {
+					// 如果是目录，则上传目录
+					uploadDirectory(localFile);
+				} else {
+					// 如果是文件，则上传文件
+					uploadFile(itemName);
+				}
+			} else {
+				// 远程下载逻辑
+				java.io.File localDir = new java.io.File(peer.getCurrentPath());
+				if (fileSystemProvider.isDirectory(itemPath.toString())) {
+					// 如果选中的是目录，则下载目录
+					downloadDirectory(itemName, new java.io.File(localDir, itemName));
+				} else {
+					// 如果选中的是文件，则下载文件
+					downloadFile(itemName);
+				}
 			}
-			refresh();
 		}
 	}
 
@@ -611,7 +611,7 @@ public class FileExplorerComponent extends JPanel {
 				return;
 			}
 			String oldFileName = (String) fileTable.getValueAt(selectedRow, 0);
-			String oldFilePath = Paths.get(currentPath, oldFileName).toString();
+			String oldFilePath = Path.of((currentPath.equals("/") ? "" : currentPath) + "/" + oldFileName).toString();
 
 			String newFilename = promptForName("请输入新的文件名:", "重命名");
 			if (newFilename != null && !newFilename.trim().isEmpty()) {
