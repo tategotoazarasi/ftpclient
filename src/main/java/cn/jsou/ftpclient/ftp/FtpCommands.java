@@ -1,5 +1,6 @@
 package cn.jsou.ftpclient.ftp;
 
+import cn.jsou.ftpclient.utils.GlobalPathUtil;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -158,6 +159,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response changeWorkingDirectory(String pathname) throws IOException {
+		pathname = GlobalPathUtil.normalizePath(pathname);
 		return sendCommand(CHANGE_WORKING_DIRECTORY, pathname);
 	}
 
@@ -305,6 +307,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response store(String pathname) throws IOException {
+		pathname = GlobalPathUtil.normalizePath(pathname);
 		return sendCommand(STORE, pathname);
 	}
 
@@ -319,6 +322,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response retrieve(String filename) throws IOException {
+		filename = GlobalPathUtil.normalizePath(filename);
 		return sendCommand(RETRIEVE, filename);
 	}
 
@@ -333,6 +337,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response renameFrom(String pathname) throws IOException {
+		pathname = GlobalPathUtil.normalizePath(pathname);
 		return sendCommand(RENAME_FROM, pathname);
 	}
 
@@ -347,6 +352,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response renameTo(String filename) throws IOException {
+		filename = GlobalPathUtil.normalizePath(filename);
 		return sendCommand(RENAME_TO, filename);
 	}
 
@@ -362,6 +368,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response delete(String filepath) throws IOException {
+		filepath = GlobalPathUtil.normalizePath(filepath);
 		return sendCommand(DELETE, filepath);
 	}
 
@@ -376,6 +383,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response makeDirectory(String pathname) throws IOException {
+		pathname = GlobalPathUtil.normalizePath(pathname);
 		return sendCommand(MAKE_DIRECTORY, pathname);
 	}
 
@@ -390,6 +398,7 @@ public class FtpCommands {
 	 * @see <a href="https://tools.ietf.org/html/rfc959">RFC 959</a>
 	 */
 	Response removeDirectory(String pathname) throws IOException {
+		pathname = GlobalPathUtil.normalizePath(pathname);
 		return sendCommand(REMOVE_DIRECTORY, pathname);
 	}
 
