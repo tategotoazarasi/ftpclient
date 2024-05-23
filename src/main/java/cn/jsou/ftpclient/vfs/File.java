@@ -1,7 +1,10 @@
 package cn.jsou.ftpclient.vfs;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Map;
 
 /**
@@ -62,13 +65,27 @@ public class File {
 	public File(String name, Map<String, String> factsMap) {
 		this.name = name;
 		this.size = Long.parseLong(factsMap.getOrDefault("size", "0"));
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		this.modifiedTime = factsMap.containsKey("modify") ?
-		                    LocalDateTime.parse(factsMap.getOrDefault("modify", LocalDateTime.now().format(formatter)),
-		                                        formatter) : null;
-		this.createdTime  = factsMap.containsKey("create") ?
-		                    LocalDateTime.parse(factsMap.getOrDefault("create", LocalDateTime.now().format(formatter)),
-		                                        formatter) : null;
+		DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyyMMddHHmmss.SSS");
+
+		this.modifiedTime = parseDate(factsMap.get("modify"), formatter1, formatter2);
+		this.createdTime  = parseDate(factsMap.get("create"), formatter1, formatter2);
+	}
+
+	private LocalDateTime parseDate(String dateStr, DateTimeFormatter formatter1, DateTimeFormatter formatter2) {
+		if (dateStr != null) {
+			try {
+				return LocalDateTime.parse(dateStr, formatter1);
+			} catch (DateTimeParseException e) {
+				try {
+					ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateStr, formatter2.withZone(ZoneId.of("UTC+8")));
+					return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+				} catch (DateTimeParseException ex) {
+					return LocalDateTime.now();
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
