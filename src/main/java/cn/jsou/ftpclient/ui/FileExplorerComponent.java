@@ -557,7 +557,7 @@ public class FileExplorerComponent extends JPanel {
 			String itemName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
 			// 构建要上传或下载的文件或目录的路径
-			Path itemPath = Path.of((currentPath.equals("/") ? "" : currentPath) + '/' + itemName);
+			Path itemPath = Path.of(GlobalPathUtil.normalizePath(currentPath + '/' + itemName));
 
 			if (!isRemote) {
 				// 本地上传逻辑
