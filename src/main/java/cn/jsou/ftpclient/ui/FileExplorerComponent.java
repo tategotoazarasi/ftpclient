@@ -145,7 +145,7 @@ public class FileExplorerComponent extends JPanel {
 				}
 
 				// 构建新目录的完整路径
-				Path newPath = Paths.get(currentPath, newFolderName);
+				Path newPath = Path.of(currentPath + '/' + newFolderName);
 
 				// 检查目录是否已存在
 				if (fileSystemProvider.isDirectory(GlobalPathUtil.toUnixPath(newPath.toString()))) {
@@ -427,7 +427,7 @@ public class FileExplorerComponent extends JPanel {
 			String itemName      = (String) fileTable.getModel().getValueAt(modelRowIndex, 0);
 
 			// 构建要上传或下载的文件或目录的路径
-			Path itemPath = Paths.get(currentPath, itemName);
+			Path itemPath = Path.of(currentPath + '/' + itemName);
 
 			if (!isRemote) {
 				// 本地上传逻辑
